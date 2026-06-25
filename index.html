@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pack</title>
+<style>
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE9;
+    --border: #E2DED7;
+    --text: #1A1714;
+    --text2: #6B645A;
+    --text3: #9E9589;
+    --accent: #2D6A4F;
+    --accent-light: #D8EEE3;
+    --packed: #2D6A4F;
+    --packed-bg: #EAF5EF;
+    --warn: #C45C2A;
+    --warn-bg: #FDF0E9;
+    --optional: #7B6FA0;
+    --optional-bg: #F0EDF8;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── Header ── */
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-header h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .app-header .trip-meta {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 1px;
+  }
+  .btn-icon {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--text2);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+  }
+  .btn-icon:hover { background: var(--surface2); color: var(--text); }
+
+  /* ── Views ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── Home / Setup ── */
+  .center-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 { font-size: 18px; margin-bottom: 16px; }
+  .home-empty {
+    text-align: center;
+    padding: 60px 24px;
+  }
+  .home-empty .icon { font-size: 48px; margin-bottom: 16px; }
+  .home-empty h2 { font-size: 22px; margin-bottom: 8px; }
+  .home-empty p { color: var(--text2); margin-bottom: 24px; font-size: 14px; }
+
+  /* ── Form ── */
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    background: var(--surface);
+    color: var(--text);
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .trip-type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .type-btn {
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .type-btn .type-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .type-btn.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .travel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .business-days-row {
+    display: none;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .business-days-row.visible { display: flex; }
+  .business-days-row .form-group { flex: 1; margin-bottom: 0; }
+  .info-box {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    width: 100%;
+  }
+  .btn-primary:hover { background: #235A41; }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-danger { background: #FEE2E2; color: #991B1B; }
+  .btn-danger:hover { background: #FCA5A5; }
+  .btn-sm { padding: 7px 12px; font-size: 13px; }
+
+  /* ── Progress Bar ── */
+  .progress-bar-wrap {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+  }
+  .progress-bar-track {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .progress-label {
+    font-size: 12px;
+    color: var(--text2);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── List View ── */
+  .list-container { padding: 12px 16px 80px; max-width: 600px; margin: 0 auto; }
+
+  /* ── Category ── */
+  .category-block {
+    margin-bottom: 8px;
+  }
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .category-header h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text2);
+  }
+  .category-header .cat-badge {
+    font-size: 11px;
+    color: var(--text3);
+  }
+  .category-chevron {
+    font-size: 12px;
+    color: var(--text3);
+    transition: transform 0.2s;
+  }
+  .category-block.collapsed .category-chevron { transform: rotate(-90deg); }
+  .category-block.collapsed .items-list { display: none; }
+
+  /* ── Items ── */
+  .items-list {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .item-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    transition: background 0.15s;
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-row.packed {
+    background: var(--packed-bg);
+    opacity: 0.75;
+  }
+  .item-row.optional-item {
+    background: var(--optional-bg);
+  }
+
+  .item-name {
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+  .item-row.packed .item-name {
+    text-decoration: line-through;
+    color: var(--text3);
+  }
+  .item-qty-label {
+    font-size: 12px;
+    color: var(--text3);
+    min-width: 20px;
+    text-align: right;
+  }
+
+  /* Checkbox items */
+  .item-checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    background: var(--surface);
+    position: relative;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .item-checkbox:checked {
+    background: var(--packed);
+    border-color: var(--packed);
+  }
+  .item-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  /* Quantity select items */
+  .qty-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .qty-packed-select {
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+    appearance: none;
+    -webkit-appearance: none;
+    text-align: center;
+    min-width: 48px;
+    cursor: pointer;
+  }
+  .qty-packed-select.packed-full {
+    background: var(--packed-bg);
+    border-color: var(--packed);
+    color: var(--packed);
+    font-weight: 600;
+  }
+  .qty-of-label {
+    font-size: 13px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+
+  /* ── Optional Section ── */
+  .optional-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0 8px;
+  }
+  .optional-divider span {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--optional);
+    white-space: nowrap;
+  }
+  .optional-divider::before,
+  .optional-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── To Do List ── */
+  .todo-section {
+    margin-top: 24px;
+    margin-bottom: 8px;
+  }
+  .todo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .todo-header h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text2);
+  }
+  .todo-list {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .todo-item {
+    display: flex;
+    align-items: center;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-text {
+    flex: 1;
+    font-size: 15px;
+  }
+  .todo-item.done .todo-text {
+    text-decoration: line-through;
+    color: var(--text3);
+  }
+  .todo-add-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .todo-add-row input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+  }
+  .todo-add-row input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .todo-add-btn {
+    padding: 9px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .todo-delete-btn {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 16px;
+    line-height: 1;
+    border-radius: 4px;
+  }
+  .todo-delete-btn:hover { color: var(--warn); background: var(--warn-bg); }
+
+  /* ── Edit View ── */
+  .edit-container { padding: 12px 16px 80px; max-width: 600px; margin: 0 auto; }
+  .edit-category-block {
+    margin-bottom: 16px;
+  }
+  .edit-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px 6px;
+  }
+  .edit-category-header h3 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text2);
+  }
+  .edit-items-list {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .edit-item-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+  .edit-item-row:last-child { border-bottom: none; }
+  .drag-handle {
+    color: var(--text3);
+    cursor: grab;
+    font-size: 16px;
+    flex-shrink: 0;
+    padding: 0 2px;
+    user-select: none;
+  }
+  .drag-handle:active { cursor: grabbing; }
+  .edit-item-name {
+    flex: 1;
+    font-size: 14px;
+  }
+  .edit-item-section-badge {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .badge-packing {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .badge-optional {
+    background: var(--optional-bg);
+    color: var(--optional);
+  }
+  .edit-item-actions { display: flex; gap: 4px; }
+  .edit-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .edit-btn:hover { background: var(--surface2); }
+  .edit-btn.danger { border-color: #FCA5A5; color: #991B1B; }
+  .edit-btn.danger:hover { background: #FEE2E2; }
+  .add-item-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .add-item-row input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+  }
+  .add-item-row input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .add-item-row select {
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .add-item-row .btn-primary { width: auto; padding: 9px 14px; font-size: 14px; }
+
+  /* ── FAB ── */
+  .fab-row {
+    position: fixed;
+    bottom: 20px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    z-index: 50;
+    padding: 0 16px;
+  }
+  .fab {
+    padding: 13px 22px;
+    border-radius: 50px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .fab-edit {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .fab-new {
+    background: var(--warn);
+    color: white;
+  }
+  .fab:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(0,0,0,0.22); }
+
+  /* ── Dragging ── */
+  .dragging { opacity: 0.4; background: var(--surface2) !important; }
+  .drag-over { border-top: 2px solid var(--accent) !important; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .modal h3 { font-size: 17px; margin-bottom: 16px; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+  .modal-btns .btn { flex: 1; }
+
+  /* ── Loading ── */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .loading-overlay.hidden { display: none; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-overlay p { color: var(--text2); font-size: 14px; }
+
+  /* ── Utilities ── */
+  .text-sm { font-size: 13px; }
+  .text-muted { color: var(--text2); }
+  .mt-8 { margin-top: 8px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p>Loading...</p>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMsg" class="text-muted text-sm"></p>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- App Header (shown on list/edit views) -->
+<header class="app-header" id="appHeader" style="display:none">
+  <div>
+    <h1 id="headerTitle">Pack</h1>
+    <div class="trip-meta" id="headerMeta"></div>
+  </div>
+  <div style="display:flex;gap:4px">
+    <button class="btn-icon" id="headerEditBtn" onclick="goToEdit()" title="Edit items">✏️ Edit</button>
+  </div>
+</header>
+
+<!-- HOME VIEW -->
+<div class="view active" id="viewHome">
+  <div class="center-wrap">
+    <div class="home-empty" id="homeEmpty">
+      <div class="icon">🧳</div>
+      <h2>No trip planned</h2>
+      <p>Set up a trip to generate your packing list.</p>
+      <button class="btn btn-primary" onclick="goToSetup()" style="max-width:200px;margin:0 auto">Start a trip</button>
+    </div>
+    <div id="homeTripActive" style="display:none">
+      <div class="card">
+        <div class="flex-between">
+          <div>
+            <h2 id="homeTripName" style="margin-bottom:4px"></h2>
+            <p class="text-sm text-muted" id="homeTripDates"></p>
+          </div>
+          <span id="homeTripType" style="font-size:24px"></span>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="goToList()" style="flex:1">Open List</button>
+          <button class="btn btn-secondary btn-sm" onclick="confirmNewTrip()">New Trip</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP VIEW -->
+<div class="view" id="viewSetup">
+  <div class="center-wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <button class="btn-icon" onclick="goHome()">← Back</button>
+      <h2 style="font-size:20px">New Trip</h2>
+    </div>
+
+    <div class="card">
+      <div class="form-group">
+        <label>Destination</label>
+        <input type="text" id="setupDestination" placeholder="e.g. Costa Mesa, CA" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Depart</label>
+          <input type="date" id="setupStartDate" />
+        </div>
+        <div class="form-group">
+          <label>Return</label>
+          <input type="date" id="setupEndDate" />
+        </div>
+      </div>
+      <div id="setupDaysInfo" class="info-box" style="display:none"></div>
+
+      <div class="form-group">
+        <label>Trip Type</label>
+        <div class="trip-type-grid">
+          <button class="type-btn selected" id="typeBtnPersonal" onclick="selectTripType('personal')">
+            <span class="type-icon">🏖️</span>Personal
+          </button>
+          <button class="type-btn" id="typeBtnBusiness" onclick="selectTripType('business')">
+            <span class="type-icon">💼</span>Business
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Travel Mode</label>
+        <div class="travel-grid">
+          <button class="type-btn selected" id="modeBtnAir" onclick="selectTravelMode('air')">
+            <span class="type-icon">✈️</span>Air
+          </button>
+          <button class="type-btn" id="modeBtnCar" onclick="selectTravelMode('car')">
+            <span class="type-icon">🚗</span>Car
+          </button>
+          <button class="type-btn" id="modeBtnOther" onclick="selectTravelMode('other')">
+            <span class="type-icon">🗺️</span>Other
+          </button>
+        </div>
+      </div>
+
+      <div class="business-days-row" id="businessDaysRow">
+        <div class="form-group">
+          <label>Business Days</label>
+          <select id="setupBusinessDays" onchange="updateCasualDays()"></select>
+        </div>
+        <div class="form-group">
+          <label>Casual Days</label>
+          <input type="text" id="setupCasualDays" readonly style="background:var(--surface2);color:var(--text2)" />
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generateTrip()" style="margin-top:4px">Generate Packing List →</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIST VIEW -->
+<div class="view" id="viewList">
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-label">
+      <span id="progressText">0 of 0 packed</span>
+      <span id="progressPct">0%</span>
+    </div>
+  </div>
+
+  <div class="list-container" id="listContainer"></div>
+
+  <div class="fab-row">
+    <button class="fab fab-edit" onclick="goToEdit()">✏️ Edit List</button>
+    <button class="fab fab-new" onclick="confirmNewTrip()">+ New Trip</button>
+  </div>
+</div>
+
+<!-- EDIT VIEW -->
+<div class="view" id="viewEdit">
+  <div class="edit-container" id="editContainer"></div>
+  <div class="fab-row">
+    <button class="fab fab-edit" onclick="goToList()" style="background:var(--accent);color:white">✓ Done Editing</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyAeGdpHwhJs_0qkqtLMf4Z1LCSEodlcKok",
+  authDomain:        "ztevez-apps.firebaseapp.com",
+  projectId:         "ztevez-apps",
+  storageBucket:     "ztevez-apps.firebasestorage.app",
+  messagingSenderId: "609437870016",
+  appId:             "1:609437870016:web:29aed98b4b1d5e7bab0a25"
+};
+
+// ── Firebase Init ──
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const TRIP_DOC = doc(db, 'packingList', 'currentTrip');
+
+// ── State ──
+let tripData = null; // { trip, categories, todos }
+let setupState = { tripType: 'personal', travelMode: 'air' };
+let dragSrc = null;
+
+// ── Boot ──
+async function boot() {
+  try {
+    const snap = await getDoc(TRIP_DOC);
+    if (snap.exists()) {
+      tripData = snap.data();
+      showHome();
+    } else {
+      tripData = null;
+      showHome();
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Error connecting to database. Please check your connection.');
+  }
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+// ── Save ──
+async function save() {
+  try {
+    await setDoc(TRIP_DOC, tripData);
+  } catch(e) {
+    console.error('Save error', e);
+  }
+}
+
+// ── Navigation ──
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const showHeader = id === 'viewList' || id === 'viewEdit';
+  document.getElementById('appHeader').style.display = showHeader ? '' : 'none';
+  document.getElementById('headerEditBtn').style.display = id === 'viewList' ? '' : 'none';
+  if (showHeader && tripData) {
+    const t = tripData.trip;
+    document.getElementById('headerTitle').textContent = t.destination;
+    document.getElementById('headerMeta').textContent = formatDateRange(t.startDate, t.endDate) + ' · ' + t.tripDays + ' days';
+  }
+  window.scrollTo(0,0);
+}
+
+window.goHome = function() { showView('viewHome'); showHome(); };
+window.goToSetup = function() {
+  setupState = { tripType: 'personal', travelMode: 'air' };
+  document.getElementById('setupDestination').value = '';
+  document.getElementById('setupStartDate').value = '';
+  document.getElementById('setupEndDate').value = '';
+  document.getElementById('setupDaysInfo').style.display = 'none';
+  document.getElementById('businessDaysRow').classList.remove('visible');
+  selectTripType('personal');
+  selectTravelMode('air');
+  showView('viewSetup');
+};
+window.goToList = function() { renderList(); showView('viewList'); };
+window.goToEdit = function() { renderEdit(); showView('viewEdit'); };
+
+function showHome() {
+  if (tripData) {
+    document.getElementById('homeEmpty').style.display = 'none';
+    document.getElementById('homeTripActive').style.display = '';
+    const t = tripData.trip;
+    document.getElementById('homeTripName').textContent = t.destination;
+    document.getElementById('homeTripDates').textContent = formatDateRange(t.startDate, t.endDate) + ' · ' + t.tripDays + ' days';
+    document.getElementById('homeTripType').textContent = t.tripType === 'business' ? '💼' : '🏖️';
+  } else {
+    document.getElementById('homeEmpty').style.display = '';
+    document.getElementById('homeTripActive').style.display = 'none';
+  }
+  showView('viewHome');
+}
+
+// ── Setup Logic ──
+window.selectTripType = function(type) {
+  setupState.tripType = type;
+  document.getElementById('typeBtnPersonal').classList.toggle('selected', type === 'personal');
+  document.getElementById('typeBtnBusiness').classList.toggle('selected', type === 'business');
+  const isBiz = type === 'business';
+  const row = document.getElementById('businessDaysRow');
+  if (isBiz) {
+    row.classList.add('visible');
+    populateBusinessDaysDropdown();
+  } else {
+    row.classList.remove('visible');
+  }
+};
+
+window.selectTravelMode = function(mode) {
+  setupState.travelMode = mode;
+  ['air','car','other'].forEach(m => {
+    document.getElementById('modeBtn' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('selected', m === mode);
+  });
+};
+
+function getTripDays() {
+  const s = document.getElementById('setupStartDate').value;
+  const e = document.getElementById('setupEndDate').value;
+  if (!s || !e) return 0;
+  const days = Math.round((new Date(e) - new Date(s)) / 86400000) + 1;
+  return days > 0 ? days : 0;
+}
+
+function populateBusinessDaysDropdown() {
+  const days = getTripDays();
+  const sel = document.getElementById('setupBusinessDays');
+  sel.innerHTML = '';
+  const max = Math.max(days - 1, 1);
+  for (let i = 1; i <= max; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i;
+    sel.appendChild(opt);
+  }
+  sel.value = Math.max(1, max - 1);
+  updateCasualDays();
+}
+
+window.updateCasualDays = function() {
+  const days = getTripDays();
+  const biz = parseInt(document.getElementById('setupBusinessDays').value) || 0;
+  document.getElementById('setupCasualDays').value = Math.max(0, days - biz);
+};
+
+// Listen to date changes
+['setupStartDate','setupEndDate'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    const days = getTripDays();
+    const info = document.getElementById('setupDaysInfo');
+    if (days > 0) {
+      info.style.display = '';
+      info.textContent = days + '-day trip';
+    } else {
+      info.style.display = 'none';
+    }
+    if (setupState.tripType === 'business') populateBusinessDaysDropdown();
+    updateCasualDays();
+  });
+});
+
+window.generateTrip = function() {
+  const dest = document.getElementById('setupDestination').value.trim();
+  const start = document.getElementById('setupStartDate').value;
+  const end = document.getElementById('setupEndDate').value;
+  if (!dest) { alert('Please enter a destination.'); return; }
+  if (!start || !end) { alert('Please enter travel dates.'); return; }
+  const days = getTripDays();
+  if (days <= 0) { alert('Return date must be after departure date.'); return; }
+
+  const tripType = setupState.tripType;
+  const travelMode = setupState.travelMode;
+  const businessDays = tripType === 'business' ? (parseInt(document.getElementById('setupBusinessDays').value) || 1) : 0;
+  const casualDays = tripType === 'business' ? Math.max(0, days - businessDays) : days;
+
+  // Detect season from start date for cold weather logic
+  const month = new Date(start + 'T12:00:00').getMonth(); // 0=Jan
+  const isWinter = month <= 1 || month >= 10; // Nov-Feb
+
+  tripData = {
+    trip: { destination: dest, startDate: start, endDate: end, tripDays: days, tripType, travelMode, businessDays, casualDays, isWinter },
+    categories: buildDefaultCategories({ tripType, travelMode, days, businessDays, casualDays, isWinter }),
+    todos: [
+      { id: uid(), text: 'Pack bags', done: false },
+      { id: uid(), text: 'Charge devices', done: false },
+      { id: uid(), text: 'Check weather forecast', done: false }
+    ]
+  };
+
+  save();
+  goToList();
+};
+
+// ── Default Item Builder ──
+function buildDefaultCategories({ tripType, travelMode, days, businessDays, casualDays, isWinter }) {
+  const isBiz = tripType === 'business';
+  const isCar = travelMode === 'car';
+
+  function item(name, qty, section='packing', opts={}) {
+    const isChk = qty === 1 || opts.checkbox;
+    return {
+      id: uid(),
+      name,
+      quantity: qty,
+      packedQty: 0,
+      checked: false,
+      isCheckbox: isChk,
+      section,
+      ...opts
+    };
+  }
+
+  const cats = [];
+
+  // ── Casual Clothes ──
+  const casualItems = [
+    item('Shirts', days),
+    item('Pants', Math.ceil(days / 2)),
+    item('Socks', days + 1),
+    item('Underwear', days + 1),
+    item('Shoes', 1, 'packing', {checkbox:true}),
+    item('Jacket', 1, 'packing', {checkbox:true}),
+    item('Sweater/Hoodie', 1, 'optional', {checkbox:true}),
+    item('Shorts', 1, 'optional', {checkbox:true}),
+    item('Sandals', 1, 'optional', {checkbox:true}),
+    item('Sunglasses', 1, 'packing', {checkbox:true}),
+    item('Umbrella', 1, 'optional', {checkbox:true}),
+    item('Hat/Gloves/Scarf', 1, 'optional', {checkbox:true}),
+    item('Laundry Bag', 1, 'packing', {checkbox:true}),
+    item('Eye Mask', 1, 'optional', {checkbox:true}),
+    item('Lens Wipes', 1, 'optional', {checkbox:true}),
+  ];
+  cats.push({ id: uid(), name: 'Casual Clothes', items: casualItems });
+
+  // ── Dress Clothes (business only) ──
+  if (isBiz) {
+    const dressItems = [
+      item('Dress Shirts', businessDays),
+      item('Undershirts', businessDays),
+      item('Dress Socks', businessDays),
+      item('Dress Shoes', 1, 'packing', {checkbox:true}),
+      item('Dress Belt', 1, 'packing', {checkbox:true}),
+      item('Dress Pants', Math.ceil(businessDays / 2)),
+      item('Tie', 1, 'optional', {checkbox:true}),
+      item('Suit Jacket', 1, 'optional', {checkbox:true}),
+    ];
+    cats.push({ id: uid(), name: 'Dress Clothes', items: dressItems });
+  }
+
+  // ── Electronics ──
+  const elecItems = [
+    item('Phone', 1, 'packing', {checkbox:true}),
+    item('Phone Charger', 1, 'packing', {checkbox:true}),
+    item('iPad', 1, 'packing', {checkbox:true}),
+    item('iPad Charger', 1, 'packing', {checkbox:true}),
+    item('Apple Pencil', 1, 'packing', {checkbox:true}),
+    item('Apple Watch', 1, 'packing', {checkbox:true}),
+    item('Watch Charger', 1, 'packing', {checkbox:true}),
+    item('Portable Charger', 1, 'packing', {checkbox:true}),
+    item('Headphones', 1, 'packing', {checkbox:true}),
+    item('Book', 1, 'optional', {checkbox:true}),
+    item('Car Charger', 1, isCar ? 'packing' : 'optional', {checkbox:true}),
+    item('Car Phone Mount', 1, isCar ? 'packing' : 'optional', {checkbox:true}),
+  ];
+  cats.push({ id: uid(), name: 'Electronics', items: elecItems });
+
+  // ── Work Electronics (business only) ──
+  if (isBiz) {
+    const workItems = [
+      item('Laptop', 1, 'packing', {checkbox:true}),
+      item('Laptop Charger', 1, 'packing', {checkbox:true}),
+      item('Mouse', 1, 'packing', {checkbox:true}),
+      item('Work ID', 1, 'packing', {checkbox:true}),
+      item('Glasses', 1, 'packing', {checkbox:true}),
+      item('Monitor', 1, 'optional', {checkbox:true}),
+      item('Monitor Cord', 1, 'optional', {checkbox:true}),
+      item('Ethernet Cable', 1, 'optional', {checkbox:true}),
+    ];
+    cats.push({ id: uid(), name: 'Work', items: workItems });
+  }
+
+  // ── Toiletries ──
+  const toilItems = [
+    item('Shaver', 1, 'packing', {checkbox:true}),
+    item('Shaver Charger', 1, 'packing', {checkbox:true}),
+    item('Toothbrush', 1, 'packing', {checkbox:true}),
+    item('Toothbrush Charger', 1, 'packing', {checkbox:true}),
+    item('Toothpaste', 1, 'packing', {checkbox:true}),
+    item('Deodorant', 1, 'packing', {checkbox:true}),
+    item('Shampoo', 1, 'packing', {checkbox:true}),
+    item('Clippers', 1, 'packing', {checkbox:true}),
+    item('Q-tips', 1, 'packing', {checkbox:true}),
+    item('Tissues', 1, 'packing', {checkbox:true}),
+    item('Neosporin', 1, 'optional', {checkbox:true}),
+    item('Sunscreen', 1, 'optional', {checkbox:true}),
+    item('Vitamins/Medications', 1, 'optional', {checkbox:true}),
+  ];
+  cats.push({ id: uid(), name: 'Toiletries', items: toilItems });
+
+  // ── Travel & Documents ──
+  const travelItems = [
+    item('Wallet', 1, 'packing', {checkbox:true}),
+    item('Passport/ID', 1, 'packing', {checkbox:true}),
+    item('Snacks', 1, 'packing', {checkbox:true}),
+    item('Water Bottle', 1, 'optional', {checkbox:true}),
+    item('Tickets/Boarding Pass', 1, 'optional', {checkbox:true}),
+    item('Membership Cards', 1, 'optional', {checkbox:true}),
+  ];
+  cats.push({ id: uid(), name: 'Travel & Documents', items: travelItems });
+
+  // ── Bags ──
+  const bagItems = [
+    item('Carry-on', 1, travelMode === 'air' ? 'packing' : 'optional', {checkbox:true}),
+    item('Backpack', 1, 'optional', {checkbox:true}),
+    item('Suitcase', 1, 'optional', {checkbox:true}),
+    item('Duffel Bag', 1, 'optional', {checkbox:true}),
+    item('Garment Bag', 1, 'optional', {checkbox:true}),
+  ];
+  cats.push({ id: uid(), name: 'Bags', items: bagItems });
+
+  // ── Car Items (car trips only) ──
+  if (isCar) {
+    const carItems = [
+      item('Water (bottles)', 1, 'optional', {checkbox:true}),
+      item('Extra Snacks', 1, 'optional', {checkbox:true}),
+      item('Maps/Directions', 1, 'optional', {checkbox:true}),
+      item('Paper Towels', 1, 'optional', {checkbox:true}),
+    ];
+    if (isWinter) {
+      carItems.push(
+        item('Snow Brush/Scraper', 1, 'optional', {checkbox:true}),
+        item('Shovel', 1, 'optional', {checkbox:true}),
+        item('Car Blanket', 1, 'optional', {checkbox:true}),
+        item('Emergency Kit', 1, 'optional', {checkbox:true}),
+      );
+    }
+    cats.push({ id: uid(), name: 'Car Items', items: carItems });
+  }
+
+  return cats;
+}
+
+// ── Render List ──
+function renderList() {
+  const container = document.getElementById('listContainer');
+  if (!tripData) { container.innerHTML = ''; return; }
+
+  let totalPackable = 0, totalPacked = 0;
+  const cats = tripData.categories;
+
+  // Build HTML per category
+  let html = '';
+  cats.forEach(cat => {
+    const packingItems = cat.items.filter(i => i.section === 'packing');
+    const optionalItems = cat.items.filter(i => i.section === 'optional');
+    if (cat.items.length === 0) return;
+
+    // Count for badge
+    let catPacked = 0, catTotal = 0;
+    packingItems.forEach(i => {
+      catTotal++;
+      totalPackable++;
+      if (i.isCheckbox ? i.checked : i.packedQty >= i.quantity) { catPacked++; totalPacked++; }
+    });
+
+    const allPacked = catPacked === catTotal && catTotal > 0;
+
+    html += `<div class="category-block" id="cat-${cat.id}">
+      <div class="category-header" onclick="toggleCategory('${cat.id}')">
+        <h3>${cat.name}</h3>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cat-badge">${catPacked}/${catTotal}</span>
+          <span class="category-chevron">▾</span>
+        </div>
+      </div>
+      <div class="items-list">`;
+
+    // Unpacked packing items first, then packed packing items
+    const unpackedPacking = packingItems.filter(i => !(i.isCheckbox ? i.checked : i.packedQty >= i.quantity));
+    const packedPacking = packingItems.filter(i => i.isCheckbox ? i.checked : i.packedQty >= i.quantity);
+
+    [...unpackedPacking, ...packedPacking].forEach(i => {
+      html += renderItemRow(i, cat.id);
+    });
+
+    html += `</div>`;
+
+    // Optional items
+    if (optionalItems.length > 0) {
+      html += `<div style="margin-top:8px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--optional);padding:6px 4px 4px;display:flex;align-items:center;gap:8px">
+          <span>Optional</span>
+          <span style="flex:1;height:1px;background:var(--border);display:inline-block"></span>
+        </div>
+        <div class="items-list">`;
+      optionalItems.forEach(i => {
+        html += renderOptionalItemRow(i, cat.id);
+      });
+      html += `</div></div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  // To-do section
+  html += renderTodoSection();
+
+  container.innerHTML = html;
+  updateProgress(totalPacked, totalPackable);
+  attachListEvents();
+}
+
+function renderItemRow(item, catId) {
+  const isPacked = item.isCheckbox ? item.checked : item.packedQty >= item.quantity;
+  const rowClass = isPacked ? 'item-row packed' : 'item-row';
+
+  if (item.isCheckbox) {
+    return `<div class="${rowClass}" data-item-id="${item.id}" data-cat-id="${catId}">
+      <input type="checkbox" class="item-checkbox" ${item.checked ? 'checked' : ''}
+        onchange="toggleCheck('${catId}','${item.id}',this.checked)" />
+      <span class="item-name">${item.name}</span>
+    </div>`;
+  } else {
+    const isFull = item.packedQty >= item.quantity;
+    let opts = '';
+    for (let i = 0; i <= item.quantity; i++) {
+      opts += `<option value="${i}" ${item.packedQty === i ? 'selected' : ''}>${i}</option>`;
+    }
+    return `<div class="${rowClass}" data-item-id="${item.id}" data-cat-id="${catId}">
+      <div class="qty-select-wrap">
+        <select class="qty-packed-select ${isFull ? 'packed-full' : ''}"
+          onchange="setQty('${catId}','${item.id}',parseInt(this.value))">
+          ${opts}
+        </select>
+        <span class="qty-of-label">of ${item.quantity}</span>
+      </div>
+      <span class="item-name">${item.name}</span>
+    </div>`;
+  }
+}
+
+function renderOptionalItemRow(item, catId) {
+  return `<div class="item-row optional-item" data-item-id="${item.id}" data-cat-id="${catId}">
+    <span class="item-name" style="font-size:14px;color:var(--text2)">${item.name}</span>
+    <button class="edit-btn" style="font-size:12px;padding:4px 10px;background:var(--optional-bg);border-color:var(--optional);color:var(--optional)"
+      onclick="promoteItem('${catId}','${item.id}')">Add to list</button>
+  </div>`;
+}
+
+function renderTodoSection() {
+  if (!tripData.todos) return '';
+  let html = `<div class="todo-section">
+    <div class="todo-header" onclick="toggleTodo()">
+      <h3>To Do</h3>
+      <span class="category-chevron" id="todoChevron">▾</span>
+    </div>
+    <div id="todoListWrap">
+    <div class="todo-list">`;
+  tripData.todos.forEach(t => {
+    html += `<div class="todo-item ${t.done ? 'done' : ''}" data-todo-id="${t.id}">
+      <input type="checkbox" class="item-checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodoItem('${t.id}',this.checked)" />
+      <span class="todo-text">${escHtml(t.text)}</span>
+      <button class="todo-delete-btn" onclick="deleteTodoItem('${t.id}')">×</button>
+    </div>`;
+  });
+  html += `</div>
+    <div class="todo-add-row">
+      <input type="text" id="todoAddInput" placeholder="Add a to-do..." onkeydown="if(event.key==='Enter')addTodoItem()" />
+      <button class="todo-add-btn" onclick="addTodoItem()">Add</button>
+    </div>
+    </div>
+  </div>`;
+  return html;
+}
+
+function attachListEvents() {}
+
+function updateProgress(packed, total) {
+  const pct = total > 0 ? Math.round((packed / total) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${packed} of ${total} packed`;
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+// ── Item Interactions ──
+window.toggleCheck = function(catId, itemId, checked) {
+  const item = findItem(catId, itemId);
+  if (!item) return;
+  item.checked = checked;
+  save();
+  renderList();
+};
+
+window.setQty = function(catId, itemId, qty) {
+  const item = findItem(catId, itemId);
+  if (!item) return;
+  item.packedQty = qty;
+  save();
+  renderList();
+};
+
+window.promoteItem = function(catId, itemId) {
+  const item = findItem(catId, itemId);
+  if (!item) return;
+  item.section = 'packing';
+  save();
+  renderList();
+};
+
+window.toggleCategory = function(catId) {
+  document.getElementById('cat-' + catId).classList.toggle('collapsed');
+};
+
+window.toggleTodo = function() {
+  document.getElementById('todoListWrap').classList.toggle('hidden');
+  // simple toggle
+  const wrap = document.getElementById('todoListWrap');
+  wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
+};
+
+window.toggleTodoItem = function(todoId, done) {
+  const t = tripData.todos.find(x => x.id === todoId);
+  if (t) { t.done = done; save(); renderList(); }
+};
+
+window.addTodoItem = function() {
+  const inp = document.getElementById('todoAddInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  tripData.todos.push({ id: uid(), text, done: false });
+  inp.value = '';
+  save();
+  renderList();
+};
+
+window.deleteTodoItem = function(todoId) {
+  tripData.todos = tripData.todos.filter(x => x.id !== todoId);
+  save();
+  renderList();
+};
+
+// ── Edit View ──
+function renderEdit() {
+  const container = document.getElementById('editContainer');
+  if (!tripData) { container.innerHTML = ''; return; }
+
+  let html = `<div style="padding:8px 4px 16px">
+    <h2 style="font-size:18px">Edit Packing List</h2>
+    <p class="text-sm text-muted" style="margin-top:4px">Drag items to reorder. Use buttons to move between Packing and Optional.</p>
+  </div>`;
+
+  tripData.categories.forEach(cat => {
+    html += `<div class="edit-category-block" id="editcat-${cat.id}">
+      <div class="edit-category-header">
+        <h3>${cat.name}</h3>
+      </div>
+      <div class="edit-items-list" id="editlist-${cat.id}" data-cat-id="${cat.id}">`;
+
+    cat.items.forEach(item => {
+      html += renderEditItemRow(item, cat.id);
+    });
+
+    html += `</div>
+      <div class="add-item-row" style="margin-top:8px">
+        <input type="text" placeholder="Add item to ${cat.name}..." id="addInput-${cat.id}" onkeydown="if(event.key==='Enter')addItemToCategory('${cat.id}')" />
+        <select id="addSection-${cat.id}">
+          <option value="packing">Packing</option>
+          <option value="optional">Optional</option>
+        </select>
+        <button class="btn btn-primary" onclick="addItemToCategory('${cat.id}')">Add</button>
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+  initDragAndDrop();
+}
+
+function renderEditItemRow(item, catId) {
+  const sectionLabel = item.section === 'packing'
+    ? `<span class="edit-item-section-badge badge-packing">Packing</span>`
+    : `<span class="edit-item-section-badge badge-optional">Optional</span>`;
+  const toggleLabel = item.section === 'packing' ? 'Move to Optional' : 'Move to Packing';
+  return `<div class="edit-item-row" draggable="true" data-item-id="${item.id}" data-cat-id="${catId}" id="editrow-${item.id}">
+    <span class="drag-handle">⠿</span>
+    <span class="edit-item-name">${item.name}</span>
+    ${sectionLabel}
+    <div class="edit-item-actions">
+      <button class="edit-btn" onclick="toggleItemSection('${catId}','${item.id}')">${toggleLabel}</button>
+      <button class="edit-btn danger" onclick="confirmDeleteItem('${catId}','${item.id}','${escHtml(item.name)}')">✕</button>
+    </div>
+  </div>`;
+}
+
+window.toggleItemSection = function(catId, itemId) {
+  const item = findItem(catId, itemId);
+  if (!item) return;
+  item.section = item.section === 'packing' ? 'optional' : 'packing';
+  save();
+  renderEdit();
+};
+
+window.addItemToCategory = function(catId) {
+  const inp = document.getElementById('addInput-' + catId);
+  const name = inp.value.trim();
+  if (!name) return;
+  const section = document.getElementById('addSection-' + catId).value;
+  const cat = tripData.categories.find(c => c.id === catId);
+  if (!cat) return;
+  cat.items.push({
+    id: uid(),
+    name,
+    quantity: 1,
+    packedQty: 0,
+    checked: false,
+    isCheckbox: true,
+    section
+  });
+  inp.value = '';
+  save();
+  renderEdit();
+};
+
+window.confirmDeleteItem = function(catId, itemId, name) {
+  showConfirm(`Remove "${name}"?`, 'This item will be removed from your list.', () => {
+    const cat = tripData.categories.find(c => c.id === catId);
+    if (!cat) return;
+    cat.items = cat.items.filter(i => i.id !== itemId);
+    save();
+    renderEdit();
+  });
+};
+
+// ── Drag and Drop ──
+function initDragAndDrop() {
+  document.querySelectorAll('.edit-item-row').forEach(row => {
+    row.addEventListener('dragstart', e => {
+      dragSrc = row;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      document.querySelectorAll('.edit-item-row').forEach(r => r.classList.remove('drag-over'));
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (dragSrc && dragSrc !== row) {
+        document.querySelectorAll('.edit-item-row').forEach(r => r.classList.remove('drag-over'));
+        row.classList.add('drag-over');
+      }
+    });
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === row) return;
+      const srcItemId = dragSrc.dataset.itemId;
+      const srcCatId = dragSrc.dataset.catId;
+      const tgtItemId = row.dataset.itemId;
+      const tgtCatId = row.dataset.catId;
+      moveItem(srcCatId, srcItemId, tgtCatId, tgtItemId);
+    });
+  });
+}
+
+function moveItem(srcCatId, srcItemId, tgtCatId, tgtItemId) {
+  const srcCat = tripData.categories.find(c => c.id === srcCatId);
+  const tgtCat = tripData.categories.find(c => c.id === tgtCatId);
+  if (!srcCat || !tgtCat) return;
+
+  const srcIdx = srcCat.items.findIndex(i => i.id === srcItemId);
+  const tgtIdx = tgtCat.items.findIndex(i => i.id === tgtItemId);
+  if (srcIdx === -1 || tgtIdx === -1) return;
+
+  const [moved] = srcCat.items.splice(srcIdx, 1);
+  // If moving to different category, update section to match most common in target
+  if (srcCatId !== tgtCatId) {
+    const packingCount = tgtCat.items.filter(i => i.section === 'packing').length;
+    const optCount = tgtCat.items.filter(i => i.section === 'optional').length;
+    moved.section = packingCount >= optCount ? 'packing' : 'optional';
+  }
+  tgtCat.items.splice(tgtIdx, 0, moved);
+  save();
+  renderEdit();
+}
+
+// ── New Trip Confirm ──
+window.confirmNewTrip = function() {
+  showConfirm('Start a new trip?', 'Your current packing list will be replaced.', () => {
+    tripData = null;
+    save();
+    goToSetup();
+  });
+};
+
+// ── Helpers ──
+function findItem(catId, itemId) {
+  const cat = tripData.categories.find(c => c.id === catId);
+  return cat ? cat.items.find(i => i.id === itemId) : null;
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function formatDateRange(start, end) {
+  const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return fmt(start) + ' – ' + fmt(end);
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Modal ──
+let confirmCallback = null;
+function showConfirm(title, msg, cb) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  confirmCallback = cb;
+  document.getElementById('confirmModal').classList.add('open');
+}
+window.closeModal = function() {
+  document.getElementById('confirmModal').classList.remove('open');
+  confirmCallback = null;
+};
+document.getElementById('confirmOkBtn').addEventListener('click', () => {
+  closeModal();
+  if (confirmCallback) confirmCallback();
+});
+document.getElementById('confirmModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('confirmModal')) closeModal();
+});
+
+// ── Start ──
+boot();
+</script>
+</body>
+</html>
