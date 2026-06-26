@@ -1234,10 +1234,11 @@ window.addNewTrip = function() {
 
 window.confirmCloseTab = function(i) {
   const t = state.trips[i];
-  confirm2(`Remove "${t ? t.destination : 'this trip'}"?`, 'The trip will be removed from active tabs.', () => {
+  confirm2(`Remove "${t ? t.destination : 'this trip'}"?`, 'The trip will be removed from active tabs.', async () => {
     state.trips.splice(i, 1);
     state.activeIdx = Math.min(state.activeIdx, Math.max(0, state.trips.length - 1));
-    save(); render();
+    await save();
+    render();
   });
 };
 
@@ -1515,7 +1516,11 @@ function confirm2(title, msg, cb) {
   document.getElementById('confirmOverlay').classList.add('open');
 }
 window.closeConfirm = () => { document.getElementById('confirmOverlay').classList.remove('open'); confirmCb = null; };
-document.getElementById('confirmOk').addEventListener('click', () => { closeConfirm(); if (confirmCb) confirmCb(); });
+document.getElementById('confirmOk').addEventListener('click', () => {
+  const cb = confirmCb;
+  closeConfirm();
+  if (cb) cb();
+});
 document.getElementById('confirmOverlay').addEventListener('click', e => { if (e.target.id === 'confirmOverlay') closeConfirm(); });
 
 // ── Default categories builder ────────────────────────────────
