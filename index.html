@@ -1195,16 +1195,16 @@ window.generateList = function() {
   const days = getTripDays();
   if (days <= 0)   { alert('Return date must be after departure date.'); return; }
 
-  const isBiz  = state.setupType === 'business';
+  const isBiz  = document.getElementById('tBusiness').classList.contains('sel');
   const bizDays = isBiz ? (parseInt(document.getElementById('sBizDays').value) || 1) : 0;
   const casDay  = isBiz ? Math.max(0, days - bizDays) : days;
   const month   = new Date(start+'T12:00:00').getMonth();
   const isWinter = month <= 1 || month >= 10;
-  const isCar   = state.setupMode === 'car';
+  const isCar   = document.getElementById('mCar').classList.contains('sel');
 
   const trip = {
     id: uid(), destination: dest, startDate: start, endDate: end,
-    tripDays: days, tripType: state.setupType, travelMode: state.setupMode,
+    tripDays: days, tripType: isBiz ? 'business' : 'personal', travelMode: isCar ? 'car' : (document.getElementById('mOther').classList.contains('sel') ? 'other' : 'air'),
     businessDays: bizDays, casualDays: casDay, isWinter,
     categories: buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }),
     todos: [
@@ -1601,7 +1601,7 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Watch Charger',     1),
     item('Portable Charger',  1),
     item('Headphones',        1),
-    item('Travel Charger',  1, 'optional'),
+    item('Travel Charger',  1),
     item('Car Charger',     1, 'optional'),
     item('Car Phone Mount', 1, 'optional'),
   ]});
