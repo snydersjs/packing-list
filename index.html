@@ -1559,14 +1559,15 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
   const packDays = days - 1; // exclude departure day for quantity calculations
 
   // Casual Clothes
+  const casualDays = isBiz ? Math.ceil(packDays * 0.75) : packDays;
   cats.push({ id: uid(), name: 'Casual Clothes', items: [
-    item('Shirts',           packDays),
-    item('Pants',            Math.ceil(packDays/2)),
-    item('Shorts',           Math.ceil(packDays/2)),
+    item('Shirts',           casualDays),
+    item('Pants',            Math.ceil(casualDays/2)),
+    item('Shorts',           isBiz ? 1 : Math.ceil(casualDays/2)),
     item('Socks',            packDays+1),
     item('Underwear',        packDays+1),
     item('Shoes',            1),
-    item('Sandals',          1, isBiz ? 'optional' : 'packing'),
+    item('Sandals',          1),
     item('Belt',             1),
     item('Jacket',           1),
     item('Sweater / Hoodie', 1),
