@@ -1092,7 +1092,7 @@ function populateSetupForm(trip) {
   }
 }
 
-function applyDefaultDates() {
+function applyDefaultDates(forceReset=false) {
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
   const sunday = new Date(today);
@@ -1101,17 +1101,14 @@ function applyDefaultDates() {
   const startEl = document.getElementById('sStart');
   const endEl   = document.getElementById('sEnd');
 
-  // Use existing values only if they're in the future
+  // Always reset if forced (new trip), or if dates are in the past/empty
   const existingStart = startEl.value;
-  const existingEnd   = endEl.value;
-  if (existingStart && existingStart >= todayStr) {
-    // Dates are current or future -- keep them
+  if (!forceReset && existingStart && existingStart >= todayStr) {
     startEl.min = sundayStr;
     endEl.min   = existingStart;
     return;
   }
 
-  // Dates are in the past or empty -- reset to current week
   startEl.value = sundayStr;
   startEl.min   = sundayStr;
   endEl.value   = '';
@@ -1257,6 +1254,7 @@ window.addNewTrip = function() {
   document.getElementById('markDoneBtn').style.display = 'none';
   document.getElementById('listBody').innerHTML = '';
   populateSetupForm(null);
+  applyDefaultDates(true);
   document.getElementById('setupPanel').classList.remove('collapsed');
   document.getElementById('listBody').innerHTML = '';
 };
@@ -1635,7 +1633,8 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Tissues',           1),
     item('Lens Wipes',        1),
     item('Sunscreen',         1, 'optional'),
-    item('Medications',       1),
+    item('Multivitamins',     packDays*2),
+    item('Medications',       packDays),
   ]});
 
   // Travel & Documents
@@ -1651,6 +1650,7 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Electrolytes',      1, 'optional'),
     item('Data Plans',        1, 'optional'),
     item('Fan',               1, 'optional'),
+    item('Tea',               1, 'optional'),
   ]});
 
   // Bags
