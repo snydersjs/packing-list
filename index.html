@@ -1094,15 +1094,28 @@ function populateSetupForm(trip) {
 
 function applyDefaultDates() {
   const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
   const sunday = new Date(today);
   sunday.setDate(today.getDate() - today.getDay());
   const sundayStr = sunday.toISOString().split('T')[0];
   const startEl = document.getElementById('sStart');
-  if (!startEl.value) {
-    startEl.value = sundayStr;
-    startEl.min   = sundayStr;
-    document.getElementById('sEnd').min = sundayStr;
+  const endEl   = document.getElementById('sEnd');
+
+  // Use existing values only if they're in the future
+  const existingStart = startEl.value;
+  const existingEnd   = endEl.value;
+  if (existingStart && existingStart >= todayStr) {
+    // Dates are current or future -- keep them
+    startEl.min = sundayStr;
+    endEl.min   = existingStart;
+    return;
   }
+
+  // Dates are in the past or empty -- reset to current week
+  startEl.value = sundayStr;
+  startEl.min   = sundayStr;
+  endEl.value   = '';
+  endEl.min     = sundayStr;
 }
 
 window.toggleSetup = function() {
@@ -1545,14 +1558,15 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     return { id: uid(), name, quantity: Math.max(1, qty || 1), packedQty: 0, section };
   }
   const cats = [];
+  const packDays = days - 1; // exclude departure day for quantity calculations
 
   // Casual Clothes
   cats.push({ id: uid(), name: 'Casual Clothes', items: [
-    item('Shirts',           days),
-    item('Pants',            Math.ceil(days/2)),
-    item('Shorts',           Math.ceil(days/2)),
-    item('Socks',            days+1),
-    item('Underwear',        days+1),
+    item('Shirts',           packDays),
+    item('Pants',            Math.ceil(packDays/2)),
+    item('Shorts',           Math.ceil(packDays/2)),
+    item('Socks',            packDays+1),
+    item('Underwear',        packDays+1),
     item('Shoes',            1),
     item('Sandals',          1, isBiz ? 'optional' : 'packing'),
     item('Belt',             1),
@@ -1566,13 +1580,14 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
 
   // Dress Clothes (business)
   if (isBiz) {
+    const packBizDays = Math.max(1, bizDays - 1);
     cats.push({ id: uid(), name: 'Dress Clothes', items: [
-      item('Dress Shirts',   bizDays, 'packing', false),
-      item('Undershirts',    bizDays, 'packing', false),
-      item('Dress Socks',    bizDays, 'packing', false),
+      item('Dress Shirts',   packBizDays),
+      item('Undershirts',    packBizDays),
+      item('Dress Socks',    packBizDays),
       item('Dress Shoes',    1),
       item('Belt',           1),
-      item('Dress Pants',    Math.ceil(bizDays/2), 'packing', false),
+      item('Dress Pants',    Math.ceil(packBizDays/2)),
       item('Tie',            1, 'optional'),
       item('Suit Jacket',    1, 'optional'),
     ]});
