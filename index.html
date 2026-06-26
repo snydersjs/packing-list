@@ -2,829 +2,663 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pack</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Packing List</title>
 <style>
-  :root {
-    --bg: #F7F6F3;
-    --surface: #FFFFFF;
-    --surface2: #F0EEE9;
-    --border: #E2DED7;
-    --text: #1A1714;
-    --text2: #6B645A;
-    --text3: #9E9589;
-    --accent: #2D6A4F;
-    --accent-light: #D8EEE3;
-    --packed: #2D6A4F;
-    --packed-bg: #EAF5EF;
-    --warn: #C45C2A;
-    --warn-bg: #FDF0E9;
-    --optional: #7B6FA0;
-    --optional-bg: #F0EDF8;
-    --radius: 10px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 15px;
-  }
+:root {
+  --bg:        #0F1923;
+  --surface:   #1A2535;
+  --surface2:  #222F42;
+  --surface3:  #2A3A52;
+  --border:    #2E3F58;
+  --border2:   #3A5070;
+  --text:      #E8EDF3;
+  --text2:     #8FA8C4;
+  --text3:     #5A7A9A;
+  --accent:    #3B82C4;
+  --accent-bg: #1A2F48;
+  --packed:    #2A9D5C;
+  --packed-bg: #0F2A1E;
+  --optional:  #7C6FAA;
+  --opt-bg:    #1E1A30;
+  --danger:    #C0392B;
+  --danger-bg: #2A1015;
+  --tab-h:     48px;
+  --header-h:  56px;
+  --r:         8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
 
-  /* ── Header ── */
-  .app-header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .app-header h1 {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-  }
-  .app-header .trip-meta {
-    font-size: 12px;
-    color: var(--text2);
-    margin-top: 1px;
-  }
-  .btn-icon {
-    background: none;
-    border: none;
-    padding: 6px;
-    cursor: pointer;
-    color: var(--text2);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 13px;
-  }
-  .btn-icon:hover { background: var(--surface2); color: var(--text); }
+/* ── Layout shells ── */
+#app { display: flex; flex-direction: column; height: 100vh; }
 
-  /* ── Views ── */
-  .view { display: none; }
-  .view.active { display: block; }
+/* ── Top bar ── */
+.topbar {
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 50;
+}
+.topbar-title { font-size: 16px; font-weight: 700; letter-spacing: -0.2px; color: var(--text); }
+.topbar-meta  { font-size: 12px; color: var(--text3); margin-top: 1px; }
+.topbar-left  { flex: 1; min-width: 0; }
+.topbar-right { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
-  /* ── Home / Setup ── */
-  .center-wrap {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 24px 16px;
-  }
-  .card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: var(--shadow);
-  }
-  .card h2 { font-size: 18px; margin-bottom: 16px; }
-  .home-empty {
-    text-align: center;
-    padding: 60px 24px;
-  }
-  .home-empty .icon { font-size: 48px; margin-bottom: 16px; }
-  .home-empty h2 { font-size: 22px; margin-bottom: 8px; }
-  .home-empty p { color: var(--text2); margin-bottom: 24px; font-size: 14px; }
+/* ── Tabs ── */
+.tabs-bar {
+  height: var(--tab-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+.tabs-bar::-webkit-scrollbar { display: none; }
+.tab {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 8px;
+  border: none;
+  background: none;
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
+.tab-close {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--surface3);
+  border: none;
+  color: var(--text3);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.tab-close:hover { background: var(--danger-bg); color: var(--danger); }
+.tab-add {
+  display: flex; align-items: center; padding: 0 14px;
+  border: none; background: none;
+  color: var(--text3); font-size: 20px; cursor: pointer;
+  flex-shrink: 0;
+}
+.tab-add:hover { color: var(--accent); }
 
-  /* ── Form ── */
-  .form-group { margin-bottom: 16px; }
-  .form-group label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-  }
-  .form-group input,
-  .form-group select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 15px;
-    background: var(--surface);
-    color: var(--text);
-    appearance: none;
-    -webkit-appearance: none;
-  }
-  .form-group input:focus,
-  .form-group select:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-light);
-  }
-  .form-row { display: flex; gap: 12px; }
-  .form-row .form-group { flex: 1; }
-  .trip-type-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .type-btn {
-    padding: 12px;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-    cursor: pointer;
-    text-align: center;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text2);
-    transition: all 0.15s;
-  }
-  .type-btn .type-icon { font-size: 22px; display: block; margin-bottom: 4px; }
-  .type-btn.selected {
-    border-color: var(--accent);
-    background: var(--accent-light);
-    color: var(--accent);
-  }
-  .travel-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-  }
-  .business-days-row {
-    display: none;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .business-days-row.visible { display: flex; }
-  .business-days-row .form-group { flex: 1; margin-bottom: 0; }
-  .info-box {
-    background: var(--surface2);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 13px;
-    color: var(--text2);
-    margin-bottom: 16px;
-    line-height: 1.5;
-  }
+/* ── Progress ── */
+.progress-strip {
+  background: var(--surface2);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--packed);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+.progress-label { font-size: 12px; color: var(--text3); white-space: nowrap; }
 
-  /* ── Buttons ── */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 12px 20px;
-    border-radius: 8px;
-    border: none;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-primary {
-    background: var(--accent);
-    color: white;
-    width: 100%;
-  }
-  .btn-primary:hover { background: #235A41; }
-  .btn-secondary {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-secondary:hover { background: var(--border); }
-  .btn-danger { background: #FEE2E2; color: #991B1B; }
-  .btn-danger:hover { background: #FCA5A5; }
-  .btn-sm { padding: 7px 12px; font-size: 13px; }
+/* ── Main scroll area ── */
+.main-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 
-  /* ── Progress Bar ── */
-  .progress-bar-wrap {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 16px;
-  }
-  .progress-bar-track {
-    height: 6px;
-    background: var(--surface2);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 6px;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 3px;
-    transition: width 0.3s;
-  }
-  .progress-label {
-    font-size: 12px;
-    color: var(--text2);
-    display: flex;
-    justify-content: space-between;
-  }
+/* ── Setup panel (compact, in-line) ── */
+.setup-panel {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+}
+.setup-panel-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+}
+.setup-panel-toggle span { font-size: 13px; font-weight: 600; color: var(--text2); }
+.setup-panel-toggle .chevron { font-size: 11px; color: var(--text3); transition: transform 0.2s; }
+.setup-panel.collapsed .chevron { transform: rotate(-90deg); }
+.setup-panel.collapsed .setup-form { display: none; }
+.setup-form { margin-top: 12px; }
+.setup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (min-width: 768px) {
+  .setup-grid { grid-template-columns: repeat(4, 1fr); }
+  .setup-grid .span2 { grid-column: span 2; }
+}
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input,
+.form-group select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-size: 14px;
+  padding: 8px 10px;
+  width: 100%;
+  appearance: none; -webkit-appearance: none;
+}
+.form-group input:focus,
+.form-group select:focus { outline: none; border-color: var(--accent); }
+.form-group input[readonly] { color: var(--text3); }
+.form-group input[type="date"] { color-scheme: dark; }
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) sepia(0.3) saturate(2) hue-rotate(180deg);
+  cursor: pointer;
+}
+.type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.type-btn {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; text-align: center;
+  transition: all 0.15s;
+}
+.type-btn.sel { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+.travel-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.biz-row { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.biz-row.show { display: grid; }
+.setup-actions { display: flex; gap: 8px; margin-top: 12px; }
 
-  /* ── List View ── */
-  .list-container { padding: 12px 16px 80px; max-width: 600px; margin: 0 auto; }
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 16px; border-radius: var(--r); border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary   { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #2d6fa8; }
+.btn-ghost     { background: none; border: 1px solid var(--border); color: var(--text2); }
+.btn-ghost:hover { background: var(--surface3); color: var(--text); }
+.btn-danger    { background: var(--danger-bg); border: 1px solid var(--danger); color: var(--danger); }
+.btn-danger:hover { background: #3a1018; }
+.btn-sm        { padding: 6px 11px; font-size: 12px; }
+.btn-icon-only { padding: 7px 9px; }
 
-  /* ── Category ── */
-  .category-block {
-    margin-bottom: 8px;
-  }
-  .category-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 4px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .category-header h3 {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text2);
-  }
-  .category-header .cat-badge {
-    font-size: 11px;
-    color: var(--text3);
-  }
-  .category-chevron {
-    font-size: 12px;
-    color: var(--text3);
-    transition: transform 0.2s;
-  }
-  .category-block.collapsed .category-chevron { transform: rotate(-90deg); }
-  .category-block.collapsed .items-list { display: none; }
+/* ── Two-column list layout ── */
+.list-body {
+  padding: 12px 16px 80px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .list-body { grid-template-columns: 1fr 1fr; gap: 0 20px; }
+}
 
-  /* ── Items ── */
-  .items-list {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-  }
-  .item-row {
-    display: flex;
-    align-items: center;
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    gap: 10px;
-    transition: background 0.15s;
-  }
-  .item-row:last-child { border-bottom: none; }
-  .item-row.packed {
-    background: var(--packed-bg);
-    opacity: 0.75;
-  }
-  .item-row.optional-item {
-    background: var(--optional-bg);
-  }
+/* ── Category block ── */
+.cat-block { margin-bottom: 16px; }
+.cat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 2px; cursor: pointer; user-select: none;
+}
+.cat-header h3 {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text3);
+}
+.cat-badge { font-size: 11px; color: var(--text3); }
+.cat-chevron { font-size: 10px; color: var(--text3); transition: transform 0.2s; margin-left: 6px; }
+.cat-block.collapsed .cat-chevron { transform: rotate(-90deg); }
+.cat-block.collapsed .cat-items { display: none; }
 
-  .item-name {
-    flex: 1;
-    font-size: 15px;
-    line-height: 1.3;
-  }
-  .item-row.packed .item-name {
-    text-decoration: line-through;
-    color: var(--text3);
-  }
-  .item-qty-label {
-    font-size: 12px;
-    color: var(--text3);
-    min-width: 20px;
-    text-align: right;
-  }
+.cat-items {
+  background: var(--surface);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
 
-  /* Checkbox items */
-  .item-checkbox {
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    border: 2px solid var(--border);
-    appearance: none;
-    -webkit-appearance: none;
-    cursor: pointer;
-    background: var(--surface);
-    position: relative;
-    flex-shrink: 0;
-    transition: all 0.15s;
-  }
-  .item-checkbox:checked {
-    background: var(--packed);
-    border-color: var(--packed);
-  }
-  .item-checkbox:checked::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 13px;
-    font-weight: 700;
-  }
+/* ── Item row ── */
+.item-row {
+  display: flex; align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  transition: background 0.1s;
+}
+.item-row:last-child { border-bottom: none; }
+.item-row.is-packed { background: var(--packed-bg); }
+.item-name {
+  flex: 1; font-size: 14px; line-height: 1.3;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.item-row.is-packed .item-name { text-decoration: line-through; color: var(--text3); }
 
-  /* Quantity select items */
-  .qty-select-wrap {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-  .qty-packed-select {
-    padding: 4px 8px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 14px;
-    background: var(--surface);
-    color: var(--text);
-    appearance: none;
-    -webkit-appearance: none;
-    text-align: center;
-    min-width: 48px;
-    cursor: pointer;
-  }
-  .qty-packed-select.packed-full {
-    background: var(--packed-bg);
-    border-color: var(--packed);
-    color: var(--packed);
-    font-weight: 600;
-  }
-  .qty-of-label {
-    font-size: 13px;
-    color: var(--text3);
-    white-space: nowrap;
-  }
+/* Qty selects - dual dropdown */
+.qty-wrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.qty-sel {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-size: 13px;
+  padding: 3px 7px; min-width: 44px; text-align: center;
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+}
+.qty-sel:focus { outline: none; border-color: var(--accent); }
+.qty-sel.under-packed { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+.qty-sel.over-packed  { font-weight: 700; }
+.qty-divider { font-size: 11px; color: var(--border2); padding: 0 1px; }
+.qty-sel.packed-full { background: var(--packed-bg); border-color: var(--packed); color: var(--packed); font-weight: 700; }
+.qty-custom-wrap { position: relative; display: inline-flex; }
+.qty-custom-input {
+  position: absolute; top: calc(100% + 4px); left: 0;
+  width: 60px; padding: 5px 8px;
+  background: var(--surface3); border: 1px solid var(--accent);
+  border-radius: 6px; color: var(--text); font-size: 13px;
+  text-align: center; z-index: 20; display: none;
+}
+.qty-custom-input.open { display: block; }
+/* Todo checkbox */
+.item-cb {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 2px solid var(--border2);
+  appearance: none; -webkit-appearance: none;
+  background: var(--surface2);
+  cursor: pointer; flex-shrink: 0;
+  position: relative; transition: all 0.15s;
+}
+.item-cb:checked { background: var(--packed); border-color: var(--packed); }
+.item-cb:checked::after {
+  content: ''; position: absolute;
+  left: 3px; top: 1px; width: 6px; height: 9px;
+  border: 2px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
 
-  /* ── Optional Section ── */
-  .optional-divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 16px 0 8px;
-  }
-  .optional-divider span {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--optional);
-    white-space: nowrap;
-  }
-  .optional-divider::before,
-  .optional-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+/* ── Optional section ── */
+.opt-header {
+  padding: 8px 2px 4px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--optional);
+  display: flex; align-items: center; gap: 8px;
+}
+.opt-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.opt-items {
+  background: var(--surface);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.opt-row {
+  display: flex; align-items: center;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.opt-row:last-child { border-bottom: none; }
+.opt-name { flex: 1; font-size: 13px; color: var(--text2); }
+.btn-promote {
+  font-size: 11px; padding: 4px 9px;
+  background: var(--opt-bg); border: 1px solid var(--optional);
+  color: var(--optional); border-radius: 5px; cursor: pointer;
+  white-space: nowrap; font-weight: 500;
+}
+.btn-promote:hover { background: var(--optional); color: #fff; }
 
-  /* ── To Do List ── */
-  .todo-section {
-    margin-top: 24px;
-    margin-bottom: 8px;
-  }
-  .todo-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 4px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .todo-header h3 {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text2);
-  }
-  .todo-list {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-  }
-  .todo-item {
-    display: flex;
-    align-items: center;
-    padding: 11px 14px;
-    border-bottom: 1px solid var(--border);
-    gap: 10px;
-  }
-  .todo-item:last-child { border-bottom: none; }
-  .todo-text {
-    flex: 1;
-    font-size: 15px;
-  }
-  .todo-item.done .todo-text {
-    text-decoration: line-through;
-    color: var(--text3);
-  }
-  .todo-add-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-  }
-  .todo-add-row input {
-    flex: 1;
-    padding: 9px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-    background: var(--surface);
-    color: var(--text);
-  }
-  .todo-add-row input:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-  .todo-add-btn {
-    padding: 9px 14px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .todo-delete-btn {
-    background: none;
-    border: none;
-    color: var(--text3);
-    cursor: pointer;
-    padding: 2px 4px;
-    font-size: 16px;
-    line-height: 1;
-    border-radius: 4px;
-  }
-  .todo-delete-btn:hover { color: var(--warn); background: var(--warn-bg); }
+/* ── Todo section ── */
+.todo-section { margin-top: 8px; }
+@media (min-width: 768px) {
+  .todo-section { grid-column: 1 / -1; }
+}
+.todo-items {
+  background: var(--surface);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.todo-row {
+  display: flex; align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.todo-row:last-child { border-bottom: none; }
+.todo-text { flex: 1; font-size: 14px; }
+.todo-row.done .todo-text { text-decoration: line-through; color: var(--text3); }
+.todo-del { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 2px 4px; border-radius: 4px; }
+.todo-del:hover { color: var(--danger); background: var(--danger-bg); }
+.todo-add-row { display: flex; gap: 8px; margin-top: 8px; }
+.todo-add-row input {
+  flex: 1; padding: 8px 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text); font-size: 14px;
+}
+.todo-add-row input:focus { outline: none; border-color: var(--accent); }
 
-  /* ── Edit View ── */
-  .edit-container { padding: 12px 16px 80px; max-width: 600px; margin: 0 auto; }
-  .edit-category-block {
-    margin-bottom: 16px;
-  }
-  .edit-category-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 4px 6px;
-  }
-  .edit-category-header h3 {
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text2);
-  }
-  .edit-items-list {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    overflow: hidden;
-  }
-  .edit-item-row {
-    display: flex;
-    align-items: center;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border);
-    gap: 8px;
-  }
-  .edit-item-row:last-child { border-bottom: none; }
-  .drag-handle {
-    color: var(--text3);
-    cursor: grab;
-    font-size: 16px;
-    flex-shrink: 0;
-    padding: 0 2px;
-    user-select: none;
-  }
-  .drag-handle:active { cursor: grabbing; }
-  .edit-item-name {
-    flex: 1;
-    font-size: 14px;
-  }
-  .edit-item-section-badge {
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 10px;
-    font-weight: 500;
-  }
-  .badge-packing {
-    background: var(--accent-light);
-    color: var(--accent);
-  }
-  .badge-optional {
-    background: var(--optional-bg);
-    color: var(--optional);
-  }
-  .edit-item-actions { display: flex; gap: 4px; }
-  .edit-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 12px;
-    cursor: pointer;
-    color: var(--text2);
-    white-space: nowrap;
-  }
-  .edit-btn:hover { background: var(--surface2); }
-  .edit-btn.danger { border-color: #FCA5A5; color: #991B1B; }
-  .edit-btn.danger:hover { background: #FEE2E2; }
-  .add-item-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-  }
-  .add-item-row input {
-    flex: 1;
-    padding: 9px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-    background: var(--surface);
-    color: var(--text);
-  }
-  .add-item-row input:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-  .add-item-row select {
-    padding: 9px 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 13px;
-    background: var(--surface);
-    color: var(--text);
-    appearance: none;
-    -webkit-appearance: none;
-  }
-  .add-item-row .btn-primary { width: auto; padding: 9px 14px; font-size: 14px; }
+/* ── Edit view ── */
+.edit-body { padding: 12px 16px 80px; max-width: 760px; margin: 0 auto; }
+.edit-cat-block { margin-bottom: 20px; }
+.edit-cat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 2px 6px;
+}
+.edit-cat-header h3 {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text3);
+}
+.edit-items-list {
+  background: var(--surface);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.edit-row {
+  display: flex; align-items: center;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+.edit-row:last-child { border-bottom: none; }
+.drag-handle { color: var(--text3); cursor: grab; font-size: 14px; flex-shrink: 0; user-select: none; }
+.drag-handle:active { cursor: grabbing; }
+.edit-item-name { flex: 1; font-size: 14px; min-width: 0; }
+.sect-badge {
+  font-size: 11px; padding: 2px 7px; border-radius: 10px;
+  font-weight: 500; flex-shrink: 0;
+}
+.sect-packing  { background: var(--accent-bg); color: var(--accent); }
+.sect-optional { background: var(--opt-bg); color: var(--optional); }
+.edit-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.edit-btn {
+  background: none; border: 1px solid var(--border);
+  border-radius: 5px; padding: 4px 8px;
+  font-size: 11px; cursor: pointer; color: var(--text2);
+  white-space: nowrap;
+}
+.edit-btn:hover { background: var(--surface3); }
+.edit-btn.del { border-color: var(--danger); color: var(--danger); }
+.edit-btn.del:hover { background: var(--danger-bg); }
+.add-row { display: flex; gap: 8px; margin-top: 8px; }
+.add-row input {
+  flex: 1; padding: 8px 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text); font-size: 13px;
+}
+.add-row input:focus { outline: none; border-color: var(--accent); }
+.add-row select {
+  padding: 8px 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text); font-size: 13px;
+  appearance: none; -webkit-appearance: none;
+}
+.dragging { opacity: 0.35; }
+.drag-over-top { border-top: 2px solid var(--accent) !important; }
 
-  /* ── FAB ── */
-  .fab-row {
-    position: fixed;
-    bottom: 20px;
-    left: 0; right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    z-index: 50;
-    padding: 0 16px;
-  }
-  .fab {
-    padding: 13px 22px;
-    border-radius: 50px;
-    border: none;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.18);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s;
-  }
-  .fab-edit {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .fab-new {
-    background: var(--warn);
-    color: white;
-  }
-  .fab:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(0,0,0,0.22); }
+/* ── History view ── */
+.history-body { padding: 16px; max-width: 600px; margin: 0 auto; }
+.history-search-wrap { margin-bottom: 16px; position: relative; }
+.history-search {
+  width: 100%; padding: 10px 12px 10px 36px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text); font-size: 14px;
+}
+.history-search:focus { outline: none; border-color: var(--accent); }
+.search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 15px; pointer-events: none; }
+.history-list {
+  background: var(--surface);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.history-row {
+  display: flex; align-items: center;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.history-row:last-child { border-bottom: none; }
+.history-dest { flex: 1; font-size: 14px; }
+.history-dates { font-size: 12px; color: var(--text3); white-space: nowrap; }
+.history-empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; }
 
-  /* ── Dragging ── */
-  .dragging { opacity: 0.4; background: var(--surface2) !important; }
-  .drag-over { border-top: 2px solid var(--accent) !important; }
+/* ── Empty / no trip ── */
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 24px; text-align: center;
+}
+.empty-state h2 { font-size: 20px; margin-bottom: 8px; }
+.empty-state p { color: var(--text2); margin-bottom: 24px; font-size: 14px; }
 
-  /* ── Modal ── */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 200;
-    display: none;
-    align-items: flex-end;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--surface);
-    border-radius: 16px 16px 0 0;
-    width: 100%;
-    max-width: 500px;
-    padding: 20px;
-    max-height: 70vh;
-    overflow-y: auto;
-  }
-  .modal h3 { font-size: 17px; margin-bottom: 16px; }
-  .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
-  .modal-btns .btn { flex: 1; }
+/* ── Modal ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200; display: none;
+  align-items: flex-end; justify-content: center;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 12px 12px 0 0;
+  width: 100%; max-width: 500px;
+  padding: 20px; max-height: 60vh; overflow-y: auto;
+}
+.modal h3 { font-size: 16px; margin-bottom: 8px; }
+.modal p { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+.modal-btns { display: flex; gap: 8px; }
+.modal-btns .btn { flex: 1; }
 
-  /* ── Loading ── */
-  .loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 300;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .loading-overlay.hidden { display: none; }
-  .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-overlay p { color: var(--text2); font-size: 14px; }
+/* ── Loading ── */
+.loader {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 14px; z-index: 300;
+}
+.loader.gone { display: none; }
+.spin {
+  width: 28px; height: 28px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader p { font-size: 13px; color: var(--text3); }
 
-  /* ── Utilities ── */
-  .text-sm { font-size: 13px; }
-  .text-muted { color: var(--text2); }
-  .mt-8 { margin-top: 8px; }
-  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+/* ── Bottom action bar ── */
+.bottom-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 10px 16px 14px;
+  display: flex; gap: 8px; justify-content: flex-end;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  z-index: 40;
+}
+
+/* ── Misc ── */
+.view { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+.view.active { display: flex; }
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
 </style>
 </head>
 <body>
 
+<div id="app">
+
 <!-- Loading -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
+<div class="loader" id="loader">
+  <div class="spin"></div>
   <p>Loading...</p>
 </div>
 
-<!-- Confirm Modal -->
-<div class="modal-overlay" id="confirmModal">
+<!-- Confirm modal -->
+<div class="overlay" id="confirmOverlay">
   <div class="modal">
-    <h3 id="confirmTitle">Are you sure?</h3>
-    <p id="confirmMsg" class="text-muted text-sm"></p>
+    <h3 id="confirmTitle"></h3>
+    <p id="confirmMsg"></p>
     <div class="modal-btns">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirmOk">Confirm</button>
     </div>
   </div>
 </div>
 
-<!-- App Header (shown on list/edit views) -->
-<header class="app-header" id="appHeader" style="display:none">
-  <div>
-    <h1 id="headerTitle">Pack</h1>
-    <div class="trip-meta" id="headerMeta"></div>
-  </div>
-  <div style="display:flex;gap:4px">
-    <button class="btn-icon" id="headerEditBtn" onclick="goToEdit()" title="Edit items">✏️ Edit</button>
-  </div>
-</header>
-
-<!-- HOME VIEW -->
-<div class="view active" id="viewHome">
-  <div class="center-wrap">
-    <div class="home-empty" id="homeEmpty">
-      <div class="icon">🧳</div>
-      <h2>No trip planned</h2>
-      <p>Set up a trip to generate your packing list.</p>
-      <button class="btn btn-primary" onclick="goToSetup()" style="max-width:200px;margin:0 auto">Start a trip</button>
+<!-- ══ LIST VIEW ══ -->
+<div class="view active" id="viewList">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="listTitle">Packing List</div>
+      <div class="topbar-meta" id="listMeta"></div>
     </div>
-    <div id="homeTripActive" style="display:none">
-      <div class="card">
-        <div class="flex-between">
-          <div>
-            <h2 id="homeTripName" style="margin-bottom:4px"></h2>
-            <p class="text-sm text-muted" id="homeTripDates"></p>
-          </div>
-          <span id="homeTripType" style="font-size:24px"></span>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="showHistory()">History</button>
+      <button class="btn btn-ghost btn-sm btn-icon-only" onclick="goEdit()" title="Edit list">✏</button>
+    </div>
+  </div>
+
+  <!-- Trip tabs -->
+  <div class="tabs-bar" id="tabsBar"></div>
+
+  <!-- Progress -->
+  <div class="progress-strip" id="progressStrip" style="display:none">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel">0 / 0</div>
+  </div>
+
+  <!-- Setup panel (collapsible) -->
+  <div class="setup-panel" id="setupPanel">
+    <div class="setup-panel-toggle" onclick="toggleSetup()">
+      <span id="setupToggleLabel">Trip Details</span>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="setup-form">
+      <div class="setup-grid">
+        <div class="form-group span2">
+          <label>Destination</label>
+          <input type="text" id="sDestination" placeholder="City, State or Country" />
         </div>
-        <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="goToList()" style="flex:1">Open List</button>
-          <button class="btn btn-secondary btn-sm" onclick="confirmNewTrip()">New Trip</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- SETUP VIEW -->
-<div class="view" id="viewSetup">
-  <div class="center-wrap">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-      <button class="btn-icon" onclick="goHome()">← Back</button>
-      <h2 style="font-size:20px">New Trip</h2>
-    </div>
-
-    <div class="card">
-      <div class="form-group">
-        <label>Destination</label>
-        <input type="text" id="setupDestination" placeholder="e.g. Costa Mesa, CA" />
-      </div>
-      <div class="form-row">
         <div class="form-group">
           <label>Depart</label>
-          <input type="date" id="setupStartDate" />
+          <input type="date" id="sStart" onchange="onDatesChange()" />
         </div>
         <div class="form-group">
           <label>Return</label>
-          <input type="date" id="setupEndDate" />
+          <input type="date" id="sEnd" onchange="onDatesChange()" />
+        </div>
+        <div class="form-group">
+          <label>Trip Type</label>
+          <div class="type-grid">
+            <button class="type-btn sel" id="tPersonal" onclick="selType('personal')">Personal</button>
+            <button class="type-btn" id="tBusiness" onclick="selType('business')">Business</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Travel Mode</label>
+          <div class="travel-grid">
+            <button class="type-btn sel" id="mAir" onclick="selMode('air')">Air</button>
+            <button class="type-btn" id="mCar" onclick="selMode('car')">Car</button>
+            <button class="type-btn" id="mOther" onclick="selMode('other')">Other</button>
+          </div>
         </div>
       </div>
-      <div id="setupDaysInfo" class="info-box" style="display:none"></div>
-
-      <div class="form-group">
-        <label>Trip Type</label>
-        <div class="trip-type-grid">
-          <button class="type-btn selected" id="typeBtnPersonal" onclick="selectTripType('personal')">
-            <span class="type-icon">🏖️</span>Personal
-          </button>
-          <button class="type-btn" id="typeBtnBusiness" onclick="selectTripType('business')">
-            <span class="type-icon">💼</span>Business
-          </button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Travel Mode</label>
-        <div class="travel-grid">
-          <button class="type-btn selected" id="modeBtnAir" onclick="selectTravelMode('air')">
-            <span class="type-icon">✈️</span>Air
-          </button>
-          <button class="type-btn" id="modeBtnCar" onclick="selectTravelMode('car')">
-            <span class="type-icon">🚗</span>Car
-          </button>
-          <button class="type-btn" id="modeBtnOther" onclick="selectTravelMode('other')">
-            <span class="type-icon">🗺️</span>Other
-          </button>
-        </div>
-      </div>
-
-      <div class="business-days-row" id="businessDaysRow">
+      <div class="biz-row" id="bizRow">
         <div class="form-group">
           <label>Business Days</label>
-          <select id="setupBusinessDays" onchange="updateCasualDays()"></select>
+          <select id="sBizDays" onchange="onBizDaysChange()"></select>
         </div>
         <div class="form-group">
           <label>Casual Days</label>
-          <input type="text" id="setupCasualDays" readonly style="background:var(--surface2);color:var(--text2)" />
+          <input type="text" id="sCasualDays" readonly />
         </div>
       </div>
+      <div class="setup-actions">
+        <button class="btn btn-primary" onclick="generateList()">Generate List</button>
+        <button class="btn btn-ghost btn-sm" id="markDoneBtn" onclick="markTripDone()" style="display:none">Mark Trip Done</button>
+      </div>
+    </div>
+  </div>
 
-      <button class="btn btn-primary" onclick="generateTrip()" style="margin-top:4px">Generate Packing List →</button>
+  <!-- Main scroll area -->
+  <div class="main-scroll">
+    <div class="list-body" id="listBody">
+
     </div>
   </div>
 </div>
 
-<!-- LIST VIEW -->
-<div class="view" id="viewList">
-  <div class="progress-bar-wrap">
-    <div class="progress-bar-track">
-      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
-    </div>
-    <div class="progress-label">
-      <span id="progressText">0 of 0 packed</span>
-      <span id="progressPct">0%</span>
-    </div>
-  </div>
-
-  <div class="list-container" id="listContainer"></div>
-
-  <div class="fab-row">
-    <button class="fab fab-edit" onclick="goToEdit()">✏️ Edit List</button>
-    <button class="fab fab-new" onclick="confirmNewTrip()">+ New Trip</button>
-  </div>
-</div>
-
-<!-- EDIT VIEW -->
+<!-- ══ EDIT VIEW ══ -->
 <div class="view" id="viewEdit">
-  <div class="edit-container" id="editContainer"></div>
-  <div class="fab-row">
-    <button class="fab fab-edit" onclick="goToList()" style="background:var(--accent);color:white">✓ Done Editing</button>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Edit List</div>
+      <div class="topbar-meta" id="editMeta"></div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="goList()">Done</button>
+    </div>
+  </div>
+  <div class="main-scroll">
+    <div class="edit-body" id="editBody"></div>
   </div>
 </div>
+
+<!-- ══ HISTORY VIEW ══ -->
+<div class="view" id="viewHistory">
+  <div class="topbar">
+    <div class="topbar-left"><div class="topbar-title">Trip History</div></div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="goList()">Back</button>
+    </div>
+  </div>
+  <div class="main-scroll">
+    <div class="history-body">
+      <div class="history-search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" class="history-search" id="historySearch" placeholder="Search destinations..." oninput="renderHistory()" />
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-const firebaseConfig = {
+// ── Firebase ──────────────────────────────────────────────────
+const fbConfig = {
   apiKey:            "AIzaSyAeGdpHwhJs_0qkqtLMf4Z1LCSEodlcKok",
   authDomain:        "ztevez-apps.firebaseapp.com",
   projectId:         "ztevez-apps",
@@ -832,729 +666,738 @@ const firebaseConfig = {
   messagingSenderId: "609437870016",
   appId:             "1:609437870016:web:29aed98b4b1d5e7bab0a25"
 };
+const fbApp = initializeApp(fbConfig);
+const db    = getFirestore(fbApp);
+const STATE_REF = doc(db, 'packingList', 'currentTrip');
 
-// ── Firebase Init ──
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const TRIP_DOC = doc(db, 'packingList', 'currentTrip');
+// ── Trip History (pre-seeded from Excel) ──────────────────────
+const SEEDED_HISTORY = [{"destination":"Nag's Head, NC","dates":""},{"destination":"SAPPHIRE 08","dates":""},{"destination":"BT Americas Meeting","dates":"1/9-1/10"},{"destination":"Florida/Disney/Space Center","dates":"1/13-1/20"},{"destination":"Glasgow, Scotland-Wedding","dates":"5/9/07-5/14/07"},{"destination":"BT Americas Meeting","dates":"8/14-8/16"},{"destination":"Basking Ridge","dates":"1/16/08-1/18/08"},{"destination":"Basking Ridge","dates":"2/11/08-2/14/08"},{"destination":"Sante Fe > California","dates":"12/26 - 1/3"},{"destination":"MSFT Customer Briefing","dates":"April 23-25"},{"destination":"MS101 Training Redmond","dates":"July 15-20"},{"destination":"Oregon Roadtrip","dates":"July 25-August 3rd"},{"destination":"Chicago/NYC","dates":"August 18-21"},{"destination":"Becky/Marcus wedding","dates":"Sept. 24-28"},{"destination":"Escape the Cube St. Louis","dates":"Nov. 5-6, 2008"},{"destination":"Microsoft WPC","dates":"Nov. 13-15, 2008"},{"destination":"VoiceCon Orlando","dates":"March 29 - April 1"},{"destination":"AT&T Meeting - Atlanta","dates":"May 12-13"},{"destination":"InAAU Orlando","dates":"May 17-20"},{"destination":"Basking Ridge","dates":"9/1/09 - 9/3/09"},{"destination":"Nashville FY10 SKO","dates":"10/11/09 - 10/15/09"},{"destination":"Hawaii","dates":"11/15-11/24"},{"destination":"San Antonio SKO","dates":"2/2/10 - 2/5/10"},{"destination":"Legoland","dates":"Feb 13-16"},{"destination":"Steamboat","dates":"Mar. 26-28"},{"destination":"Cleveland Cust Event","dates":"4/14/10 - 4/15/10"},{"destination":"San Antonio SKO","dates":"2/2/10 - 2/5/10"},{"destination":"Chicago SME Show / Iowa","dates":"5/18/10 - 5/21/10"},{"destination":"Glenwood Springs","dates":"Aug. 12-14"},{"destination":"World Equestrian Games","dates":"9/29/10 - 10/4/10"},{"destination":"Basking Ridge","dates":"11/3/10 - 11/4/10"},{"destination":"West Simsbury","dates":"Dec. 23-31"},{"destination":"Yellowstone","dates":"May 31-June 4"},{"destination":"Oregon Roadtrip","dates":"July 27-August 7th"},{"destination":"Phoenix","dates":"Nov 10-13"},{"destination":"Washington D.C.","dates":"May 3-6"},{"destination":"Canon City/Royal Gorge.","dates":"June 29 - July 1"},{"destination":"Crested Butte","dates":"July 19-21"},{"destination":"New York","dates":"10/8/12 - 10/11/12"},{"destination":"Chicago","dates":"11/19/12 - 11/20/12"},{"destination":"Copenhagen","dates":"2/2/13  - 2/9/13"},{"destination":"Fort Lauderdale","dates":"Feb 15-18"},{"destination":"Legoland","dates":"June 5-9"},{"destination":"San Jose","dates":"10/16/13 - 10/19/13"},{"destination":"San Francisco","dates":""},{"destination":"London","dates":"4/26 - 5/2"},{"destination":"Tokyo","dates":"5/28-5/31"},{"destination":"Washington D.C.","dates":"6/21-6/26"},{"destination":"Seattle","dates":"Nov. 7-9, 2014"},{"destination":"Seattle","dates":"Nov. 7-9, 2014"},{"destination":"Universal Orlando","dates":"Feb 22-25"},{"destination":"Tokyo","dates":"3/31-4/5"},{"destination":"San Francisco","dates":"April 19-24"},{"destination":"Tokyo","dates":"6/18-6/24"},{"destination":"Singapore","dates":"7/19-7/24"},{"destination":"Las Vegas","dates":"August 4-7"},{"destination":"Derby/London/Dublin","dates":"8/18 - 8/28"},{"destination":"London","dates":"11/14 - 11/21"},{"destination":"London","dates":"11/14 - 11/21"},{"destination":"San Francisco","dates":"Jan. 27-28 2016"},{"destination":"San Francisco","dates":"February 28 - March 4"},{"destination":"Hawaii","dates":"3/28-4/6"},{"destination":"London, Dublin","dates":"5/1 - 5/7"},{"destination":"Santa Clara","dates":"May 11-13, 2016"},{"destination":"Singapore","dates":"7/17-7/25"},{"destination":"Las Vegas","dates":"August 4-7"},{"destination":"San Diego","dates":"August 23-24"},{"destination":"San Diego","dates":"Sept. 15-19"},{"destination":"Marseille/Dublin","dates":"9/24 - 9/30"},{"destination":"Austin","dates":"Oct. 20-24"},{"destination":"San Diego","dates":"Nov. 14-16"},{"destination":"London","dates":"11/28 - 12/2"},{"destination":"Connecticut","dates":"12/25 - 1/2"},{"destination":"San Diego","dates":"Jan 17-19"},{"destination":"San Francisco","dates":"Feb 13-16"},{"destination":"Singapore","dates":"7/17-7/25"},{"destination":"San Francisco","dates":"Feb 13-16"},{"destination":"San Diego","dates":"Jan 17-19"},{"destination":"Italy/London","dates":""},{"destination":"San Diego","dates":"Aug 16-17"},{"destination":"San Diego","dates":"Aug 16-17"},{"destination":"San Diego","dates":"Oct. 13-14"},{"destination":"London","dates":"11/28 - 12/2"},{"destination":"San Diego","dates":"Nov. 1-2"},{"destination":"Eugene","dates":"Nov. 20-23"},{"destination":"Bangkok","dates":"Dec. 1-5"},{"destination":"San Diego","dates":"Dec. 9-13"},{"destination":"San Diego","dates":"Jan 29-Feb 1"},{"destination":"San Diego","dates":"Feb 21-23"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"San Diego","dates":"May 22-23"},{"destination":"San Diego","dates":"May 29-30"},{"destination":"Vietnam","dates":"June 25-30"},{"destination":"Las Vegas","dates":"Aug 7-9"},{"destination":"San Diego","dates":"Aug 23-24"},{"destination":"San Diego","dates":"Aug 28-30"},{"destination":"Simsbury","dates":"Sept 20-25"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"Ashland","dates":"Nov 20-24"},{"destination":"San Diego","dates":"Jan 15-17"},{"destination":"Tel Aviv/Jerusalem","dates":"Jan. 26 - Feb3"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"Houston","dates":"Apr. 17-20"},{"destination":"San Diego","dates":"Apr 24-25"},{"destination":"Tokyo","dates":"6/15-6/20"},{"destination":"Las Vegas","dates":"Aug 6-8"},{"destination":"Mt Princeton","dates":"Aug 9-11"},{"destination":"San Diego","dates":"Sep 11-12"},{"destination":"Australia","dates":"Sep. 18 - Oct 2"},{"destination":"San Diego","dates":"Oct. 23-24"},{"destination":"Charleston","dates":"Nov. 6-11"},{"destination":"San Diego","dates":"Nov. 18-22"},{"destination":"College Tour","dates":"Nov. 24-28"},{"destination":"San Diego","dates":"Dec 10-12"},{"destination":"San Diego","dates":"Jan 12-13"},{"destination":"Tel Aviv","dates":"Jan. 27 - Feb 1"},{"destination":"San Diego","dates":"Feb 5-6"},{"destination":"Phoenix","dates":"Feb 7-9"},{"destination":"Disney/Universal","dates":"Feb 12-16"},{"destination":"San Francisco","dates":"Feb 24-27"},{"destination":"San Francisco","dates":"Feb 24-27"},{"destination":"Atlanta","dates":"May 30 - June 2"},{"destination":"San Diego","dates":"July 29-Aug9"},{"destination":"Atlanta","dates":"July 26-29"},{"destination":"Atlanta","dates":"July 26-29"},{"destination":"Cal Poly","dates":"Nov. 12-15"},{"destination":"Belize","dates":"Dec 20-28"},{"destination":"San Luis Obispo","dates":"Jan 12-15"},{"destination":"Eugene","dates":"Feb. 2-5"},{"destination":"Atlanta","dates":"July 26-29"},{"destination":"New Mexico, Arizona","dates":"March 24-31"},{"destination":"Eugene","dates":"April 19-22"},{"destination":"San Franciso, RSA","dates":"April 24-27"},{"destination":"CA College Tour","dates":"May 28-June 4"},{"destination":"Eugene","dates":"July 20-23"},{"destination":"London","dates":"Aug 31 - Sept 9"},{"destination":"Eugene","dates":"Sept 28 - Oct 1"},{"destination":"Eugene","dates":"Nov 27 - 29"},{"destination":"Eugene","dates":"Nov 30 - Dec 3"},{"destination":"Sante Fe","dates":"Dec 27 - 29"},{"destination":"Eugene","dates":"Feb 1-4"},{"destination":"Atlanta","dates":"Feb 19-23"},{"destination":"Phoenix","dates":"March 1-3"},{"destination":"Eugene","dates":"April 4-7"},{"destination":"SLO","dates":"June 13-18"},{"destination":"Broadmoor Conference","dates":"August 6-8"},{"destination":"Oxy drop off","dates":"August 15-19"},{"destination":"Services meeting","dates":"August 21-23"},{"destination":"Eugene","dates":"Sept 5-8"},{"destination":"Brownsville, TX","dates":"Sept 27-30"},{"destination":"Los Angeles","dates":"Oct 17-20"},{"destination":"Orlando","dates":"Oct 20-24"},{"destination":"Portugal & Morocco","dates":"Oct. 28 - Nov. 15"},{"destination":"Austin AWS","dates":"Nov 18-20"},{"destination":"Marketing LT","dates":"Dec 3-5"},{"destination":"Oxy move out","dates":"Jan 17-19"},{"destination":"Eugene","dates":"Jan 30 - Feb 2"},{"destination":"Utah / AZ","dates":"Feb 23 -Mar 1"},{"destination":"Phoenix","dates":"Mar 17 - 21"},{"destination":"Tampa","dates":"Apr 27 - May 1"},{"destination":"Brownsville","dates":"May 14 - 18"},{"destination":"Orlando","dates":"June 2 - 5"},{"destination":"Italy and Slovenia","dates":"July 3-12"},{"destination":"Eugene","dates":"July 16 - 20"},{"destination":"Tampa","dates":"Aug 26-29"},{"destination":"Austin, le mans","dates":"Sep 5-8"},{"destination":"Fort Worth","dates":"Sept 22-25"},{"destination":"Orlando","dates":"Nov 4-7"},{"destination":"Sante Fe","dates":"Nov 8-10"},{"destination":"Eugene to Denver","dates":"Nov 20-23"},{"destination":"Tampa","dates":"Dec 7-10"},{"destination":"Costa Rica","dates":"Dec 13-20"},{"destination":"Simsbury","dates":"Jan 22 - 26"},{"destination":"Costa Mesa, CA","dates":"Feb 18-23"}];
 
-// ── State ──
-let tripData = null; // { trip, categories, todos }
-let setupState = { tripType: 'personal', travelMode: 'air' };
+// ── App State ──────────────────────────────────────────────────
+let state = {
+  trips: [],        // array of trip objects
+  activeIdx: 0,
+  history: [],      // past trips (dest + dates)
+  setupType: 'personal',
+  setupMode: 'air'
+};
 let dragSrc = null;
+let confirmCb = null;
 
-// ── Boot ──
+// ── Boot ──────────────────────────────────────────────────────
 async function boot() {
   try {
-    const snap = await getDoc(TRIP_DOC);
+    const snap = await getDoc(STATE_REF);
     if (snap.exists()) {
-      tripData = snap.data();
-      showHome();
-    } else {
-      tripData = null;
-      showHome();
+      const saved = snap.data();
+      state.trips   = saved.trips   || [];
+      state.history = saved.history || [];
+      state.activeIdx = Math.min(saved.activeIdx || 0, Math.max(0, state.trips.length - 1));
     }
+    // Merge seeded history (at the back, most recent first in render)
+    // history stored most-recent-first; seeded entries go at the end
+    render();
   } catch(e) {
     console.error(e);
-    alert('Error connecting to database. Please check your connection.');
+    alert('Could not connect to database.');
   }
-  document.getElementById('loadingOverlay').classList.add('hidden');
+  document.getElementById('loader').classList.add('gone');
 }
 
-// ── Save ──
 async function save() {
-  try {
-    await setDoc(TRIP_DOC, tripData);
-  } catch(e) {
-    console.error('Save error', e);
-  }
+  try { await setDoc(STATE_REF, { trips: state.trips, history: state.history, activeIdx: state.activeIdx }); }
+  catch(e) { console.error(e); }
 }
 
-// ── Navigation ──
+// ── Views ─────────────────────────────────────────────────────
 function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  const showHeader = id === 'viewList' || id === 'viewEdit';
-  document.getElementById('appHeader').style.display = showHeader ? '' : 'none';
-  document.getElementById('headerEditBtn').style.display = id === 'viewList' ? '' : 'none';
-  if (showHeader && tripData) {
-    const t = tripData.trip;
-    document.getElementById('headerTitle').textContent = t.destination;
-    document.getElementById('headerMeta').textContent = formatDateRange(t.startDate, t.endDate) + ' · ' + t.tripDays + ' days';
-  }
   window.scrollTo(0,0);
 }
+window.goList    = () => { render(); showView('viewList'); };
+window.goEdit    = () => { renderEdit(); showView('viewEdit'); };
+window.showHistory = () => { renderHistory(); showView('viewHistory'); };
 
-window.goHome = function() { showView('viewHome'); showHome(); };
-window.goToSetup = function() {
-  setupState = { tripType: 'personal', travelMode: 'air' };
-  document.getElementById('setupDestination').value = '';
-  document.getElementById('setupStartDate').value = '';
-  document.getElementById('setupEndDate').value = '';
-  document.getElementById('setupDaysInfo').style.display = 'none';
-  document.getElementById('businessDaysRow').classList.remove('visible');
-  selectTripType('personal');
-  selectTravelMode('air');
-  showView('viewSetup');
-};
-window.goToList = function() { renderList(); showView('viewList'); };
-window.goToEdit = function() { renderEdit(); showView('viewEdit'); };
-
-function showHome() {
-  if (tripData) {
-    document.getElementById('homeEmpty').style.display = 'none';
-    document.getElementById('homeTripActive').style.display = '';
-    const t = tripData.trip;
-    document.getElementById('homeTripName').textContent = t.destination;
-    document.getElementById('homeTripDates').textContent = formatDateRange(t.startDate, t.endDate) + ' · ' + t.tripDays + ' days';
-    document.getElementById('homeTripType').textContent = t.tripType === 'business' ? '💼' : '🏖️';
-  } else {
-    document.getElementById('homeEmpty').style.display = '';
-    document.getElementById('homeTripActive').style.display = 'none';
+// ── Render (list view) ────────────────────────────────────────
+function render() {
+  renderTabs();
+  const trip = state.trips[state.activeIdx];
+  if (!trip) {
+    // No trips: show empty + expanded setup
+    document.getElementById('listTitle').textContent = 'Packing List';
+    document.getElementById('listMeta').textContent  = '';
+    document.getElementById('progressStrip').style.display = 'none';
+    document.getElementById('markDoneBtn').style.display = 'none';
+    document.getElementById('setupToggleLabel').textContent = 'New Trip';
+    const panel = document.getElementById('setupPanel');
+    panel.classList.remove('collapsed');
+    populateSetupForm(null);
+    document.getElementById('listBody').innerHTML = '';
+    return;
   }
-  showView('viewHome');
+
+  document.getElementById('listTitle').textContent = trip.destination;
+  document.getElementById('listMeta').textContent  = fmtDateRange(trip.startDate, trip.endDate) + '  ·  ' + trip.tripDays + ' days';
+  document.getElementById('markDoneBtn').style.display = '';
+  document.getElementById('setupToggleLabel').textContent = 'Trip Details';
+  populateSetupForm(trip);
+  renderList(trip);
 }
 
-// ── Setup Logic ──
-window.selectTripType = function(type) {
-  setupState.tripType = type;
-  document.getElementById('typeBtnPersonal').classList.toggle('selected', type === 'personal');
-  document.getElementById('typeBtnBusiness').classList.toggle('selected', type === 'business');
-  const isBiz = type === 'business';
-  const row = document.getElementById('businessDaysRow');
-  if (isBiz) {
-    row.classList.add('visible');
-    populateBusinessDaysDropdown();
+function renderTabs() {
+  const bar = document.getElementById('tabsBar');
+  let html = '';
+  state.trips.forEach((t, i) => {
+    const active = i === state.activeIdx ? 'active' : '';
+    html += `<button class="tab ${active}" onclick="switchTab(${i})">
+      ${esc(t.destination)}
+      <button class="tab-close" onclick="event.stopPropagation();confirmCloseTab(${i})">×</button>
+    </button>`;
+  });
+  html += `<button class="tab-add" onclick="addNewTrip()" title="Add trip">+</button>`;
+  bar.innerHTML = html;
+}
+
+function renderList(trip) {
+  let totalPack = 0, totalDone = 0;
+  let html = '';
+
+  trip.categories.forEach(cat => {
+    const packing  = cat.items.filter(i => i.section === 'packing');
+    const optional = cat.items.filter(i => i.section === 'optional');
+    if (!packing.length && !optional.length) return;
+
+    let catDone = 0, catTotal = packing.length;
+    packing.forEach(i => { if (isDone(i)) catDone++; });
+    totalPack += catTotal; totalDone += catDone;
+
+    const unpacked = packing.filter(i => !isDone(i));
+    const packed   = packing.filter(i =>  isDone(i));
+
+    html += `<div class="cat-block" id="cat-${cat.id}">
+      <div class="cat-header" onclick="toggleCat('${cat.id}')">
+        <h3>${esc(cat.name)}</h3>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span class="cat-badge">${catDone}/${catTotal}</span>
+          <span class="cat-chevron">▾</span>
+        </div>
+      </div>
+      <div class="cat-items">`;
+
+    [...unpacked, ...packed].forEach(item => { html += itemRowHtml(item, cat.id); });
+    html += `</div>`;
+
+    if (optional.length) {
+      html += `<div class="opt-header">Optional</div><div class="opt-items">`;
+      optional.forEach(item => {
+        html += `<div class="opt-row">
+          <span class="opt-name">${esc(item.name)}</span>
+          <button class="btn-promote" onclick="promoteItem('${cat.id}','${item.id}')">Add to list</button>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`; // cat-block
+  });
+
+  // To-do
+  html += `<div class="todo-section cat-block" id="cat-todo">
+    <div class="cat-header" onclick="toggleCat('cat-todo')">
+      <h3>To Do</h3><span class="cat-chevron">▾</span>
+    </div>
+    <div class="cat-items todo-items">`;
+  (trip.todos || []).forEach(t => {
+    html += `<div class="todo-row ${t.done ? 'done' : ''}">
+      <input type="checkbox" class="item-cb" ${t.done ? 'checked' : ''} onchange="toggleTodo('${t.id}',this.checked)" />
+      <span class="todo-text">${esc(t.text)}</span>
+      <button class="todo-del" onclick="deleteTodo('${t.id}')">×</button>
+    </div>`;
+  });
+  html += `</div>
+    <div class="todo-add-row">
+      <input type="text" id="todoInput" placeholder="Add a to-do..." onkeydown="if(event.key==='Enter')addTodo()" />
+      <button class="btn btn-ghost btn-sm" onclick="addTodo()">Add</button>
+    </div>
+  </div>`;
+
+  document.getElementById('listBody').innerHTML = html;
+
+  const pct = totalPack > 0 ? Math.round((totalDone/totalPack)*100) : 0;
+  document.getElementById('progressStrip').style.display = '';
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${totalDone} / ${totalPack} packed`;
+}
+
+function buildLeftOpts(qtp) {
+  // 0 through max(10, qtp), then 10+/[max]+ for custom
+  const max = Math.max(10, qtp);
+  let o = '';
+  for (let n = 0; n <= max; n++) o += `<option value="${n}" ${qtp===n?'selected':''}>${n}</option>`;
+  o += `<option value="__custom">${max}+</option>`;
+  return o;
+}
+
+function buildRightOpts(qtp, qpd) {
+  // Always 0, then max(1, qtp-5) through qtp+5, then [qtp+5]+
+  const lo  = Math.max(1, qtp - 5);
+  const hi  = qtp + 5;
+  let o = `<option value="0" ${qpd===0?'selected':''}>0</option>`;
+  if (lo > 1) o += `<option disabled>—</option>`;
+  for (let n = lo; n <= hi; n++) o += `<option value="${n}" ${qpd===n?'selected':''}>${n}</option>`;
+  o += `<option value="__custom">${hi}+</option>`;
+  return o;
+}
+
+function itemRowHtml(item, catId) {
+  const done = isDone(item);
+  const cls  = done ? 'item-row is-packed' : 'item-row';
+  const qtp  = item.quantity;    // qty to pack (left)
+  const qpd  = item.packedQty;  // qty packed  (right)
+
+  // Left dropdown: 0-10, then 10+ triggers custom
+  const leftOpts  = buildLeftOpts(qtp);
+  const rightOpts = buildRightOpts(qtp, qpd);
+
+  return `<div class="${cls}" data-item-id="${item.id}" data-cat-id="${catId}">
+    <div class="qty-wrap">
+      <div class="qty-custom-wrap">
+        <select class="qty-sel" onchange="onLeftQty('${catId}','${item.id}',this)">${leftOpts}</select>
+        <input type="number" class="qty-custom-input" id="lc-${item.id}" min="1" onblur="commitCustomLeft('${catId}','${item.id}',this)" onkeydown="if(event.key==='Enter')this.blur()" />
+      </div>
+      <span class="qty-divider">/</span>
+      <div class="qty-custom-wrap">
+        <select class="qty-sel ${done?'packed-full':qpd>0&&qpd<qtp?'under-packed':qpd>qtp?'over-packed':''}" onchange="onRightQty('${catId}','${item.id}',this)">${rightOpts}</select>
+        <input type="number" class="qty-custom-input" id="rc-${item.id}" min="0" onblur="commitCustomRight('${catId}','${item.id}',this)" onkeydown="if(event.key==='Enter')this.blur()" />
+      </div>
+    </div>
+    <span class="item-name">${esc(item.name)}</span>
+  </div>`;
+}
+
+// ── Setup form ────────────────────────────────────────────────
+function populateSetupForm(trip) {
+  if (trip) {
+    document.getElementById('sDestination').value = trip.destination;
+    document.getElementById('sStart').value       = trip.startDate;
+    document.getElementById('sEnd').value         = trip.endDate;
+    state.setupType = trip.tripType;
+    state.setupMode = trip.travelMode;
+    selType(trip.tripType, false);
+    selMode(trip.travelMode, false);
+    if (trip.tripType === 'business') {
+      populateBizDropdown(trip.tripDays, trip.businessDays);
+      document.getElementById('sCasualDays').value = trip.casualDays;
+    }
   } else {
-    row.classList.remove('visible');
+    document.getElementById('sDestination').value = '';
+    document.getElementById('sStart').value       = '';
+    document.getElementById('sEnd').value         = '';
+    selType('personal', false);
+    selMode('air', false);
+  }
+}
+
+window.toggleSetup = function() {
+  document.getElementById('setupPanel').classList.toggle('collapsed');
+};
+
+window.onDatesChange = function() {
+  const days = getTripDays();
+  if (state.setupType === 'business' && days > 0) populateBizDropdown(days, null);
+  window.onBizDaysChange();
+};
+
+window.onBizDaysChange = function() {
+  const days = getTripDays();
+  const biz  = parseInt(document.getElementById('sBizDays').value) || 0;
+  document.getElementById('sCasualDays').value = Math.max(0, days - biz);
+};
+
+window.selType = function(t, update=true) {
+  state.setupType = t;
+  document.getElementById('tPersonal').classList.toggle('sel', t==='personal');
+  document.getElementById('tBusiness').classList.toggle('sel', t==='business');
+  const row = document.getElementById('bizRow');
+  if (t === 'business') {
+    row.classList.add('show');
+    const days = getTripDays();
+    if (days > 0) populateBizDropdown(days, null);
+    window.onBizDaysChange();
+  } else {
+    row.classList.remove('show');
   }
 };
 
-window.selectTravelMode = function(mode) {
-  setupState.travelMode = mode;
-  ['air','car','other'].forEach(m => {
-    document.getElementById('modeBtn' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('selected', m === mode);
-  });
+window.selMode = function(m, update=true) {
+  state.setupMode = m;
+  ['air','car','other'].forEach(x =>
+    document.getElementById('m'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('sel', x===m)
+  );
 };
+
+function populateBizDropdown(days, currentVal) {
+  const sel = document.getElementById('sBizDays');
+  sel.innerHTML = '';
+  const max = Math.max(days-1, 1);
+  for (let i=1; i<=max; i++) {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = i;
+    sel.appendChild(o);
+  }
+  sel.value = currentVal !== null ? currentVal : Math.max(1, max-1);
+}
 
 function getTripDays() {
-  const s = document.getElementById('setupStartDate').value;
-  const e = document.getElementById('setupEndDate').value;
+  const s = document.getElementById('sStart').value;
+  const e = document.getElementById('sEnd').value;
   if (!s || !e) return 0;
-  const days = Math.round((new Date(e) - new Date(s)) / 86400000) + 1;
-  return days > 0 ? days : 0;
+  const d = Math.round((new Date(e+`T12:00:00`) - new Date(s+`T12:00:00`)) / 86400000) + 1;
+  return d > 0 ? d : 0;
 }
 
-function populateBusinessDaysDropdown() {
+// ── Generate ──────────────────────────────────────────────────
+window.generateList = function() {
+  const dest  = document.getElementById('sDestination').value.trim();
+  const start = document.getElementById('sStart').value;
+  const end   = document.getElementById('sEnd').value;
+  if (!dest)       { alert('Please enter a destination.'); return; }
+  if (!start||!end){ alert('Please enter travel dates.'); return; }
   const days = getTripDays();
-  const sel = document.getElementById('setupBusinessDays');
-  sel.innerHTML = '';
-  const max = Math.max(days - 1, 1);
-  for (let i = 1; i <= max; i++) {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = i;
-    sel.appendChild(opt);
-  }
-  sel.value = Math.max(1, max - 1);
-  updateCasualDays();
-}
+  if (days <= 0)   { alert('Return date must be after departure date.'); return; }
 
-window.updateCasualDays = function() {
-  const days = getTripDays();
-  const biz = parseInt(document.getElementById('setupBusinessDays').value) || 0;
-  document.getElementById('setupCasualDays').value = Math.max(0, days - biz);
-};
+  const isBiz  = state.setupType === 'business';
+  const bizDays = isBiz ? (parseInt(document.getElementById('sBizDays').value) || 1) : 0;
+  const casDay  = isBiz ? Math.max(0, days - bizDays) : days;
+  const month   = new Date(start+'T12:00:00').getMonth();
+  const isWinter = month <= 1 || month >= 10;
+  const isCar   = state.setupMode === 'car';
 
-// Listen to date changes
-['setupStartDate','setupEndDate'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => {
-    const days = getTripDays();
-    const info = document.getElementById('setupDaysInfo');
-    if (days > 0) {
-      info.style.display = '';
-      info.textContent = days + '-day trip';
-    } else {
-      info.style.display = 'none';
-    }
-    if (setupState.tripType === 'business') populateBusinessDaysDropdown();
-    updateCasualDays();
-  });
-});
-
-window.generateTrip = function() {
-  const dest = document.getElementById('setupDestination').value.trim();
-  const start = document.getElementById('setupStartDate').value;
-  const end = document.getElementById('setupEndDate').value;
-  if (!dest) { alert('Please enter a destination.'); return; }
-  if (!start || !end) { alert('Please enter travel dates.'); return; }
-  const days = getTripDays();
-  if (days <= 0) { alert('Return date must be after departure date.'); return; }
-
-  const tripType = setupState.tripType;
-  const travelMode = setupState.travelMode;
-  const businessDays = tripType === 'business' ? (parseInt(document.getElementById('setupBusinessDays').value) || 1) : 0;
-  const casualDays = tripType === 'business' ? Math.max(0, days - businessDays) : days;
-
-  // Detect season from start date for cold weather logic
-  const month = new Date(start + 'T12:00:00').getMonth(); // 0=Jan
-  const isWinter = month <= 1 || month >= 10; // Nov-Feb
-
-  tripData = {
-    trip: { destination: dest, startDate: start, endDate: end, tripDays: days, tripType, travelMode, businessDays, casualDays, isWinter },
-    categories: buildDefaultCategories({ tripType, travelMode, days, businessDays, casualDays, isWinter }),
+  const trip = {
+    id: uid(), destination: dest, startDate: start, endDate: end,
+    tripDays: days, tripType: state.setupType, travelMode: state.setupMode,
+    businessDays: bizDays, casualDays: casDay, isWinter,
+    categories: buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }),
     todos: [
-      { id: uid(), text: 'Pack bags', done: false },
-      { id: uid(), text: 'Charge devices', done: false },
-      { id: uid(), text: 'Check weather forecast', done: false }
+      { id: uid(), text: 'Pack bags',               done: false },
+      { id: uid(), text: 'Charge devices',           done: false },
+      { id: uid(), text: 'Check weather forecast',   done: false }
     ]
   };
 
-  save();
-  goToList();
+  // Replace current trip if it exists, otherwise add
+  if (state.trips[state.activeIdx]) {
+    confirm2(`Replace "${state.trips[state.activeIdx].destination}"?`, 'This will overwrite the current trip\'s list.', () => {
+      state.trips[state.activeIdx] = trip;
+      finishGenerate(trip);
+    });
+  } else {
+    state.trips.push(trip);
+    state.activeIdx = state.trips.length - 1;
+    finishGenerate(trip);
+  }
 };
 
-// ── Default Item Builder ──
-function buildDefaultCategories({ tripType, travelMode, days, businessDays, casualDays, isWinter }) {
-  const isBiz = tripType === 'business';
-  const isCar = travelMode === 'car';
+function finishGenerate(trip) {
+  document.getElementById('setupPanel').classList.add('collapsed');
+  save();
+  render();
+}
 
-  function item(name, qty, section='packing', opts={}) {
-    const isChk = qty === 1 || opts.checkbox;
-    return {
-      id: uid(),
-      name,
-      quantity: qty,
-      packedQty: 0,
-      checked: false,
-      isCheckbox: isChk,
-      section,
-      ...opts
-    };
+// ── Switch/add/close tabs ──────────────────────────────────────
+window.switchTab = function(i) {
+  state.activeIdx = i;
+  save();
+  render();
+};
+
+window.addNewTrip = function() {
+  state.trips.push(null); // placeholder
+  state.activeIdx = state.trips.length - 1;
+  state.trips.pop(); // remove placeholder; render will show empty
+  // Actually just show setup for a new blank trip
+  state.activeIdx = state.trips.length; // beyond array = new
+  renderTabs();
+  document.getElementById('listTitle').textContent = 'New Trip';
+  document.getElementById('listMeta').textContent  = '';
+  document.getElementById('progressStrip').style.display = 'none';
+  document.getElementById('markDoneBtn').style.display = 'none';
+  document.getElementById('listBody').innerHTML = '';
+  populateSetupForm(null);
+  document.getElementById('setupPanel').classList.remove('collapsed');
+};
+
+window.confirmCloseTab = function(i) {
+  const t = state.trips[i];
+  confirm2(`Remove "${t ? t.destination : 'this trip'}"?`, 'The trip will be removed from active tabs.', () => {
+    state.trips.splice(i, 1);
+    state.activeIdx = Math.min(state.activeIdx, Math.max(0, state.trips.length - 1));
+    save(); render();
+  });
+};
+
+// ── Mark trip done ─────────────────────────────────────────────
+window.markTripDone = function() {
+  const trip = state.trips[state.activeIdx];
+  if (!trip) return;
+  confirm2(`Mark "${trip.destination}" as done?`, 'It will be archived to Trip History.', () => {
+    state.history.unshift({ destination: trip.destination, dates: fmtDateRange(trip.startDate, trip.endDate) });
+    state.trips.splice(state.activeIdx, 1);
+    state.activeIdx = Math.min(state.activeIdx, Math.max(0, state.trips.length - 1));
+    save(); render();
+  });
+};
+
+// ── List interactions ─────────────────────────────────────────
+window.toggleCat = function(id) {
+  const el = document.getElementById('cat-' + id) || document.getElementById(id);
+  if (el) el.classList.toggle('collapsed');
+};
+
+window.onLeftQty = function(catId, itemId, sel) {
+  if (sel.value === '__custom') {
+    const inp = document.getElementById('lc-' + itemId);
+    inp.classList.add('open');
+    inp.focus();
+    sel.value = sel.options[sel.options.length - 2].value; // revert to last real value
+    return;
   }
+  const item = findItem(catId, itemId);
+  if (!item) return;
+  item.quantity = parseInt(sel.value);
+  save(); renderList(state.trips[state.activeIdx]);
+};
 
+window.commitCustomLeft = function(catId, itemId, inp) {
+  inp.classList.remove('open');
+  const val = parseInt(inp.value);
+  if (!val || val < 1) return;
+  const item = findItem(catId, itemId);
+  if (!item) return;
+  item.quantity = val;
+  inp.value = '';
+  save(); renderList(state.trips[state.activeIdx]);
+};
+
+window.onRightQty = function(catId, itemId, sel) {
+  if (sel.value === '__custom') {
+    const inp = document.getElementById('rc-' + itemId);
+    inp.classList.add('open');
+    inp.focus();
+    sel.value = sel.options[sel.options.length - 2].value;
+    return;
+  }
+  const item = findItem(catId, itemId);
+  if (!item) return;
+  item.packedQty = parseInt(sel.value);
+  save(); renderList(state.trips[state.activeIdx]);
+};
+
+window.commitCustomRight = function(catId, itemId, inp) {
+  inp.classList.remove('open');
+  const val = parseInt(inp.value);
+  if (val === undefined || val < 0 || isNaN(val)) return;
+  const item = findItem(catId, itemId);
+  if (!item) return;
+  item.packedQty = val;
+  inp.value = '';
+  save(); renderList(state.trips[state.activeIdx]);
+};
+
+window.promoteItem = function(catId, itemId) {
+  const item = findItem(catId, itemId);
+  if (item) { item.section = 'packing'; save(); renderList(state.trips[state.activeIdx]); }
+};
+
+window.toggleTodo = function(id, done) {
+  const trip = state.trips[state.activeIdx];
+  const t = trip.todos.find(x => x.id === id);
+  if (t) { t.done = done; save(); renderList(trip); }
+};
+
+window.addTodo = function() {
+  const inp  = document.getElementById('todoInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  const trip = state.trips[state.activeIdx];
+  trip.todos.push({ id: uid(), text, done: false });
+  inp.value = '';
+  save(); renderList(trip);
+};
+
+window.deleteTodo = function(id) {
+  const trip = state.trips[state.activeIdx];
+  trip.todos = trip.todos.filter(x => x.id !== id);
+  save(); renderList(trip);
+};
+
+// ── Edit view ─────────────────────────────────────────────────
+function renderEdit() {
+  const trip = state.trips[state.activeIdx];
+  if (!trip) { showView('viewList'); return; }
+  document.getElementById('editMeta').textContent = trip.destination + '  ·  ' + fmtDateRange(trip.startDate, trip.endDate);
+
+  let html = '';
+  trip.categories.forEach(cat => {
+    html += `<div class="edit-cat-block">
+      <div class="edit-cat-header"><h3>${esc(cat.name)}</h3></div>
+      <div class="edit-items-list" id="el-${cat.id}" data-cat-id="${cat.id}">`;
+    cat.items.forEach(item => { html += editRowHtml(item, cat.id); });
+    html += `</div>
+      <div class="add-row">
+        <input type="text" placeholder="Add to ${esc(cat.name)}..." id="ai-${cat.id}" onkeydown="if(event.key==='Enter')addItem('${cat.id}')" />
+        <select id="as-${cat.id}">
+          <option value="packing">Packing</option>
+          <option value="optional">Optional</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="addItem('${cat.id}')">Add</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('editBody').innerHTML = html;
+  initDrag();
+}
+
+function editRowHtml(item, catId) {
+  const badge = item.section === 'packing'
+    ? `<span class="sect-badge sect-packing">Packing</span>`
+    : `<span class="sect-badge sect-optional">Optional</span>`;
+  const togLabel = item.section === 'packing' ? 'Move to Optional' : 'Move to Packing';
+  return `<div class="edit-row" draggable="true" data-item-id="${item.id}" data-cat-id="${catId}">
+    <span class="drag-handle">⠿</span>
+    <span class="edit-item-name">${esc(item.name)}</span>
+    ${badge}
+    <div class="edit-actions">
+      <button class="edit-btn" onclick="toggleSection('${catId}','${item.id}')">${togLabel}</button>
+      <button class="edit-btn del" onclick="confirmDel('${catId}','${item.id}','${esc(item.name)}')">Remove</button>
+    </div>
+  </div>`;
+}
+
+window.toggleSection = function(catId, itemId) {
+  const item = findItem(catId, itemId);
+  if (!item) return;
+  item.section = item.section === 'packing' ? 'optional' : 'packing';
+  save(); renderEdit();
+};
+
+window.addItem = function(catId) {
+  const inp  = document.getElementById('ai-' + catId);
+  const name = inp.value.trim();
+  if (!name) return;
+  const sec = document.getElementById('as-' + catId).value;
+  const cat = findCat(catId);
+  if (!cat) return;
+  cat.items.push({ id: uid(), name, quantity: 1, packedQty: 0, section: sec });
+  inp.value = '';
+  save(); renderEdit();
+};
+
+window.confirmDel = function(catId, itemId, name) {
+  confirm2(`Remove "${name}"?`, 'This item will be deleted from your list.', () => {
+    const cat = findCat(catId);
+    if (cat) { cat.items = cat.items.filter(i => i.id !== itemId); save(); renderEdit(); }
+  });
+};
+
+// ── Drag & drop ───────────────────────────────────────────────
+function initDrag() {
+  document.querySelectorAll('.edit-row').forEach(row => {
+    row.addEventListener('dragstart', e => { dragSrc = row; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    row.addEventListener('dragend',   () => { row.classList.remove('dragging'); clearDragOver(); });
+    row.addEventListener('dragover',  e => { e.preventDefault(); if (dragSrc && dragSrc !== row) { clearDragOver(); row.classList.add('drag-over-top'); } });
+    row.addEventListener('drop',      e => { e.preventDefault(); if (!dragSrc || dragSrc === row) return; moveItemDrop(dragSrc.dataset.catId, dragSrc.dataset.itemId, row.dataset.catId, row.dataset.itemId); });
+  });
+}
+function clearDragOver() { document.querySelectorAll('.drag-over-top').forEach(r => r.classList.remove('drag-over-top')); }
+
+function moveItemDrop(sCatId, sItemId, tCatId, tItemId) {
+  const sCat = findCat(sCatId), tCat = findCat(tCatId);
+  if (!sCat || !tCat) return;
+  const si = sCat.items.findIndex(i => i.id === sItemId);
+  const ti = tCat.items.findIndex(i => i.id === tItemId);
+  if (si === -1 || ti === -1) return;
+  const [moved] = sCat.items.splice(si, 1);
+  if (sCatId !== tCatId) {
+    const pc = tCat.items.filter(i => i.section === 'packing').length;
+    const oc = tCat.items.filter(i => i.section === 'optional').length;
+    moved.section = pc >= oc ? 'packing' : 'optional';
+  }
+  tCat.items.splice(ti, 0, moved);
+  save(); renderEdit();
+}
+
+// ── History ───────────────────────────────────────────────────
+window.renderHistory = function() {
+  const q = (document.getElementById('historySearch').value || '').toLowerCase();
+  // Combine: user-archived trips first (most recent), then seeded history
+  const all = [...state.history, ...SEEDED_HISTORY];
+  const filtered = q ? all.filter(h => h.destination.toLowerCase().includes(q)) : all;
+
+  if (!filtered.length) {
+    document.getElementById('historyList').innerHTML = `<div class="history-empty">No results.</div>`;
+    return;
+  }
+  let html = `<div class="history-list">`;
+  filtered.forEach(h => {
+    html += `<div class="history-row">
+      <span class="history-dest">${esc(h.destination)}</span>
+      <span class="history-dates">${esc(h.dates)}</span>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('historyList').innerHTML = html;
+};
+
+// ── Helpers ───────────────────────────────────────────────────
+function findItem(catId, itemId) {
+  const cat = findCat(catId);
+  return cat ? cat.items.find(i => i.id === itemId) : null;
+}
+function findCat(catId) {
+  const trip = state.trips[state.activeIdx];
+  return trip ? trip.categories.find(c => c.id === catId) : null;
+}
+function isDone(item) { return item.quantity > 0 && item.packedQty >= item.quantity; }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDateRange(s, e) {
+  const fmt = d => new Date(d+'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (!s || !e) return '';
+  return fmt(s) + ' – ' + fmt(e);
+}
+
+function updateProgress() {} // called after toggle but renderList already handles it
+
+// ── Confirm modal ─────────────────────────────────────────────
+function confirm2(title, msg, cb) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent   = msg;
+  confirmCb = cb;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+window.closeConfirm = () => { document.getElementById('confirmOverlay').classList.remove('open'); confirmCb = null; };
+document.getElementById('confirmOk').addEventListener('click', () => { closeConfirm(); if (confirmCb) confirmCb(); });
+document.getElementById('confirmOverlay').addEventListener('click', e => { if (e.target.id === 'confirmOverlay') closeConfirm(); });
+
+// ── Default categories builder ────────────────────────────────
+function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
+  function item(name, qty, section='packing') {
+    return { id: uid(), name, quantity: qty, packedQty: 0, section };
+  }
   const cats = [];
 
-  // ── Casual Clothes ──
-  const casualItems = [
-    item('Shirts', days),
-    item('Pants', Math.ceil(days / 2)),
-    item('Socks', days + 1),
-    item('Underwear', days + 1),
-    item('Shoes', 1, 'packing', {checkbox:true}),
-    item('Jacket', 1, 'packing', {checkbox:true}),
-    item('Sweater/Hoodie', 1, 'optional', {checkbox:true}),
-    item('Shorts', 1, 'optional', {checkbox:true}),
-    item('Sandals', 1, 'optional', {checkbox:true}),
-    item('Sunglasses', 1, 'packing', {checkbox:true}),
-    item('Umbrella', 1, 'optional', {checkbox:true}),
-    item('Hat/Gloves/Scarf', 1, 'optional', {checkbox:true}),
-    item('Laundry Bag', 1, 'packing', {checkbox:true}),
-    item('Eye Mask', 1, 'optional', {checkbox:true}),
-    item('Lens Wipes', 1, 'optional', {checkbox:true}),
-  ];
-  cats.push({ id: uid(), name: 'Casual Clothes', items: casualItems });
+  // Casual Clothes
+  cats.push({ id: uid(), name: 'Casual Clothes', items: [
+    item('Shirts',         days),
+    item('Pants',          Math.ceil(days/2)),
+    item('Socks',          days+1),
+    item('Underwear',      days+1),
+    item('Shoes',          1),
+    item('Jacket',         1),
+    item('Sweater / Hoodie', 1),
+    item('Shorts',         1),
+    item('Sandals',        1, 'optional'),
+    item('Sunglasses',     1),
+    item('Umbrella',       1, 'optional'),
+    item('Laundry Bag',    1),
+  ]});
 
-  // ── Dress Clothes (business only) ──
+  // Dress Clothes (business)
   if (isBiz) {
-    const dressItems = [
-      item('Dress Shirts', businessDays),
-      item('Undershirts', businessDays),
-      item('Dress Socks', businessDays),
-      item('Dress Shoes', 1, 'packing', {checkbox:true}),
-      item('Dress Belt', 1, 'packing', {checkbox:true}),
-      item('Dress Pants', Math.ceil(businessDays / 2)),
-      item('Tie', 1, 'optional', {checkbox:true}),
-      item('Suit Jacket', 1, 'optional', {checkbox:true}),
-    ];
-    cats.push({ id: uid(), name: 'Dress Clothes', items: dressItems });
+    cats.push({ id: uid(), name: 'Dress Clothes', items: [
+      item('Dress Shirts',   bizDays, 'packing', false),
+      item('Undershirts',    bizDays, 'packing', false),
+      item('Dress Socks',    bizDays, 'packing', false),
+      item('Dress Shoes',    1),
+      item('Belt',           1),
+      item('Dress Pants',    Math.ceil(bizDays/2), 'packing', false),
+      item('Tie',            1, 'optional'),
+      item('Suit Jacket',    1, 'optional'),
+    ]});
   }
 
-  // ── Electronics ──
-  const elecItems = [
-    item('Phone', 1, 'packing', {checkbox:true}),
-    item('Phone Charger', 1, 'packing', {checkbox:true}),
-    item('iPad', 1, 'packing', {checkbox:true}),
-    item('iPad Charger', 1, 'packing', {checkbox:true}),
-    item('Apple Pencil', 1, 'packing', {checkbox:true}),
-    item('Apple Watch', 1, 'packing', {checkbox:true}),
-    item('Watch Charger', 1, 'packing', {checkbox:true}),
-    item('Portable Charger', 1, 'packing', {checkbox:true}),
-    item('Headphones', 1, 'packing', {checkbox:true}),
-    item('Book', 1, 'optional', {checkbox:true}),
-    item('Car Charger', 1, isCar ? 'packing' : 'optional', {checkbox:true}),
-    item('Car Phone Mount', 1, isCar ? 'packing' : 'optional', {checkbox:true}),
-  ];
-  cats.push({ id: uid(), name: 'Electronics', items: elecItems });
+  // Electronics
+  cats.push({ id: uid(), name: 'Electronics', items: [
+    item('Phone',             1),
+    item('Phone Charger',     1),
+    item('iPad',              1),
+    item('iPad Charger',      1),
+    item('Apple Watch',       1),
+    item('Watch Charger',     1),
+    item('Portable Charger',  1),
+    item('Headphones',        1),
+    item('Book',              1, 'optional'),
+    ...(isCar ? [item('Car Charger',     1), item('Car Phone Mount', 1)] : [item('Car Charger', 1, 'optional'), item('Car Phone Mount', 1, 'optional')]),
+  ]});
 
-  // ── Work Electronics (business only) ──
+  // Work (business)
   if (isBiz) {
-    const workItems = [
-      item('Laptop', 1, 'packing', {checkbox:true}),
-      item('Laptop Charger', 1, 'packing', {checkbox:true}),
-      item('Mouse', 1, 'packing', {checkbox:true}),
-      item('Work ID', 1, 'packing', {checkbox:true}),
-      item('Glasses', 1, 'packing', {checkbox:true}),
-      item('Monitor', 1, 'optional', {checkbox:true}),
-      item('Monitor Cord', 1, 'optional', {checkbox:true}),
-      item('Ethernet Cable', 1, 'optional', {checkbox:true}),
-    ];
-    cats.push({ id: uid(), name: 'Work', items: workItems });
+    cats.push({ id: uid(), name: 'Work', items: [
+      item('Laptop',          1),
+      item('Laptop Charger',  1),
+      item('Mouse',           1),
+      item('Work ID',         1),
+      item('Glasses',         1),
+      item('Monitor',         1, 'optional'),
+      item('Monitor Cord',    1, 'optional'),
+    ]});
   }
 
-  // ── Toiletries ──
-  const toilItems = [
-    item('Shaver', 1, 'packing', {checkbox:true}),
-    item('Shaver Charger', 1, 'packing', {checkbox:true}),
-    item('Toothbrush', 1, 'packing', {checkbox:true}),
-    item('Toothbrush Charger', 1, 'packing', {checkbox:true}),
-    item('Toothpaste', 1, 'packing', {checkbox:true}),
-    item('Deodorant', 1, 'packing', {checkbox:true}),
-    item('Shampoo', 1, 'packing', {checkbox:true}),
-    item('Clippers', 1, 'packing', {checkbox:true}),
-    item('Q-tips', 1, 'packing', {checkbox:true}),
-    item('Tissues', 1, 'packing', {checkbox:true}),
-    item('Neosporin', 1, 'optional', {checkbox:true}),
-    item('Sunscreen', 1, 'optional', {checkbox:true}),
-    item('Vitamins/Medications', 1, 'optional', {checkbox:true}),
-  ];
-  cats.push({ id: uid(), name: 'Toiletries', items: toilItems });
+  // Toiletries
+  cats.push({ id: uid(), name: 'Toiletries', items: [
+    item('Shaver',            1),
+    item('Shaver Charger',    1),
+    item('Toothbrush',        1),
+    item('Toothbrush Charger',1),
+    item('Toothpaste',        1),
+    item('Deodorant',         1),
+    item('Shampoo',           1),
+    item('Clippers',          1),
+    item('Q-tips',            1),
+    item('Tissues',           1),
+    item('Sunscreen',         1, 'optional'),
+    item('Medications',       1, 'optional'),
+  ]});
 
-  // ── Travel & Documents ──
-  const travelItems = [
-    item('Wallet', 1, 'packing', {checkbox:true}),
-    item('Passport/ID', 1, 'packing', {checkbox:true}),
-    item('Snacks', 1, 'packing', {checkbox:true}),
-    item('Water Bottle', 1, 'optional', {checkbox:true}),
-    item('Tickets/Boarding Pass', 1, 'optional', {checkbox:true}),
-    item('Membership Cards', 1, 'optional', {checkbox:true}),
-  ];
-  cats.push({ id: uid(), name: 'Travel & Documents', items: travelItems });
+  // Travel & Documents
+  cats.push({ id: uid(), name: 'Travel & Documents', items: [
+    item('Wallet',            1),
+    item('Passport / ID',     1),
+    item('Snacks',            1),
+    item('Boarding Pass',     1, 'optional'),
+    item('Membership Cards',  1, 'optional'),
+  ]});
 
-  // ── Bags ──
-  const bagItems = [
-    item('Carry-on', 1, travelMode === 'air' ? 'packing' : 'optional', {checkbox:true}),
-    item('Backpack', 1, 'optional', {checkbox:true}),
-    item('Suitcase', 1, 'optional', {checkbox:true}),
-    item('Duffel Bag', 1, 'optional', {checkbox:true}),
-    item('Garment Bag', 1, 'optional', {checkbox:true}),
-  ];
-  cats.push({ id: uid(), name: 'Bags', items: bagItems });
+  // Bags
+  cats.push({ id: uid(), name: 'Bags', items: [
+    item('Carry-on',   1, isCar ? 'optional' : 'packing'),
+    item('Backpack',   1, 'optional'),
+    item('Suitcase',   1, 'optional'),
+    item('Duffel Bag', 1, 'optional'),
+  ]});
 
-  // ── Car Items (car trips only) ──
+  // Car items
   if (isCar) {
     const carItems = [
-      item('Water (bottles)', 1, 'optional', {checkbox:true}),
-      item('Extra Snacks', 1, 'optional', {checkbox:true}),
-      item('Maps/Directions', 1, 'optional', {checkbox:true}),
-      item('Paper Towels', 1, 'optional', {checkbox:true}),
+      item('Water',          1, 'optional'),
+      item('Extra Snacks',   1, 'optional'),
+      item('Maps / GPS',     1, 'optional'),
+      item('Paper Towels',   1, 'optional'),
     ];
-    if (isWinter) {
-      carItems.push(
-        item('Snow Brush/Scraper', 1, 'optional', {checkbox:true}),
-        item('Shovel', 1, 'optional', {checkbox:true}),
-        item('Car Blanket', 1, 'optional', {checkbox:true}),
-        item('Emergency Kit', 1, 'optional', {checkbox:true}),
-      );
-    }
+    if (isWinter) carItems.push(
+      item('Snow Brush / Scraper', 1, 'optional'),
+      item('Shovel',               1, 'optional'),
+      item('Car Blanket',          1, 'optional'),
+      item('Emergency Kit',        1, 'optional'),
+    );
     cats.push({ id: uid(), name: 'Car Items', items: carItems });
   }
 
   return cats;
 }
 
-// ── Render List ──
-function renderList() {
-  const container = document.getElementById('listContainer');
-  if (!tripData) { container.innerHTML = ''; return; }
-
-  let totalPackable = 0, totalPacked = 0;
-  const cats = tripData.categories;
-
-  // Build HTML per category
-  let html = '';
-  cats.forEach(cat => {
-    const packingItems = cat.items.filter(i => i.section === 'packing');
-    const optionalItems = cat.items.filter(i => i.section === 'optional');
-    if (cat.items.length === 0) return;
-
-    // Count for badge
-    let catPacked = 0, catTotal = 0;
-    packingItems.forEach(i => {
-      catTotal++;
-      totalPackable++;
-      if (i.isCheckbox ? i.checked : i.packedQty >= i.quantity) { catPacked++; totalPacked++; }
-    });
-
-    const allPacked = catPacked === catTotal && catTotal > 0;
-
-    html += `<div class="category-block" id="cat-${cat.id}">
-      <div class="category-header" onclick="toggleCategory('${cat.id}')">
-        <h3>${cat.name}</h3>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="cat-badge">${catPacked}/${catTotal}</span>
-          <span class="category-chevron">▾</span>
-        </div>
-      </div>
-      <div class="items-list">`;
-
-    // Unpacked packing items first, then packed packing items
-    const unpackedPacking = packingItems.filter(i => !(i.isCheckbox ? i.checked : i.packedQty >= i.quantity));
-    const packedPacking = packingItems.filter(i => i.isCheckbox ? i.checked : i.packedQty >= i.quantity);
-
-    [...unpackedPacking, ...packedPacking].forEach(i => {
-      html += renderItemRow(i, cat.id);
-    });
-
-    html += `</div>`;
-
-    // Optional items
-    if (optionalItems.length > 0) {
-      html += `<div style="margin-top:8px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--optional);padding:6px 4px 4px;display:flex;align-items:center;gap:8px">
-          <span>Optional</span>
-          <span style="flex:1;height:1px;background:var(--border);display:inline-block"></span>
-        </div>
-        <div class="items-list">`;
-      optionalItems.forEach(i => {
-        html += renderOptionalItemRow(i, cat.id);
-      });
-      html += `</div></div>`;
-    }
-
-    html += `</div>`;
-  });
-
-  // To-do section
-  html += renderTodoSection();
-
-  container.innerHTML = html;
-  updateProgress(totalPacked, totalPackable);
-  attachListEvents();
-}
-
-function renderItemRow(item, catId) {
-  const isPacked = item.isCheckbox ? item.checked : item.packedQty >= item.quantity;
-  const rowClass = isPacked ? 'item-row packed' : 'item-row';
-
-  if (item.isCheckbox) {
-    return `<div class="${rowClass}" data-item-id="${item.id}" data-cat-id="${catId}">
-      <input type="checkbox" class="item-checkbox" ${item.checked ? 'checked' : ''}
-        onchange="toggleCheck('${catId}','${item.id}',this.checked)" />
-      <span class="item-name">${item.name}</span>
-    </div>`;
-  } else {
-    const isFull = item.packedQty >= item.quantity;
-    let opts = '';
-    for (let i = 0; i <= item.quantity; i++) {
-      opts += `<option value="${i}" ${item.packedQty === i ? 'selected' : ''}>${i}</option>`;
-    }
-    return `<div class="${rowClass}" data-item-id="${item.id}" data-cat-id="${catId}">
-      <div class="qty-select-wrap">
-        <select class="qty-packed-select ${isFull ? 'packed-full' : ''}"
-          onchange="setQty('${catId}','${item.id}',parseInt(this.value))">
-          ${opts}
-        </select>
-        <span class="qty-of-label">of ${item.quantity}</span>
-      </div>
-      <span class="item-name">${item.name}</span>
-    </div>`;
-  }
-}
-
-function renderOptionalItemRow(item, catId) {
-  return `<div class="item-row optional-item" data-item-id="${item.id}" data-cat-id="${catId}">
-    <span class="item-name" style="font-size:14px;color:var(--text2)">${item.name}</span>
-    <button class="edit-btn" style="font-size:12px;padding:4px 10px;background:var(--optional-bg);border-color:var(--optional);color:var(--optional)"
-      onclick="promoteItem('${catId}','${item.id}')">Add to list</button>
-  </div>`;
-}
-
-function renderTodoSection() {
-  if (!tripData.todos) return '';
-  let html = `<div class="todo-section">
-    <div class="todo-header" onclick="toggleTodo()">
-      <h3>To Do</h3>
-      <span class="category-chevron" id="todoChevron">▾</span>
-    </div>
-    <div id="todoListWrap">
-    <div class="todo-list">`;
-  tripData.todos.forEach(t => {
-    html += `<div class="todo-item ${t.done ? 'done' : ''}" data-todo-id="${t.id}">
-      <input type="checkbox" class="item-checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodoItem('${t.id}',this.checked)" />
-      <span class="todo-text">${escHtml(t.text)}</span>
-      <button class="todo-delete-btn" onclick="deleteTodoItem('${t.id}')">×</button>
-    </div>`;
-  });
-  html += `</div>
-    <div class="todo-add-row">
-      <input type="text" id="todoAddInput" placeholder="Add a to-do..." onkeydown="if(event.key==='Enter')addTodoItem()" />
-      <button class="todo-add-btn" onclick="addTodoItem()">Add</button>
-    </div>
-    </div>
-  </div>`;
-  return html;
-}
-
-function attachListEvents() {}
-
-function updateProgress(packed, total) {
-  const pct = total > 0 ? Math.round((packed / total) * 100) : 0;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressText').textContent = `${packed} of ${total} packed`;
-  document.getElementById('progressPct').textContent = pct + '%';
-}
-
-// ── Item Interactions ──
-window.toggleCheck = function(catId, itemId, checked) {
-  const item = findItem(catId, itemId);
-  if (!item) return;
-  item.checked = checked;
-  save();
-  renderList();
-};
-
-window.setQty = function(catId, itemId, qty) {
-  const item = findItem(catId, itemId);
-  if (!item) return;
-  item.packedQty = qty;
-  save();
-  renderList();
-};
-
-window.promoteItem = function(catId, itemId) {
-  const item = findItem(catId, itemId);
-  if (!item) return;
-  item.section = 'packing';
-  save();
-  renderList();
-};
-
-window.toggleCategory = function(catId) {
-  document.getElementById('cat-' + catId).classList.toggle('collapsed');
-};
-
-window.toggleTodo = function() {
-  document.getElementById('todoListWrap').classList.toggle('hidden');
-  // simple toggle
-  const wrap = document.getElementById('todoListWrap');
-  wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
-};
-
-window.toggleTodoItem = function(todoId, done) {
-  const t = tripData.todos.find(x => x.id === todoId);
-  if (t) { t.done = done; save(); renderList(); }
-};
-
-window.addTodoItem = function() {
-  const inp = document.getElementById('todoAddInput');
-  const text = inp.value.trim();
-  if (!text) return;
-  tripData.todos.push({ id: uid(), text, done: false });
-  inp.value = '';
-  save();
-  renderList();
-};
-
-window.deleteTodoItem = function(todoId) {
-  tripData.todos = tripData.todos.filter(x => x.id !== todoId);
-  save();
-  renderList();
-};
-
-// ── Edit View ──
-function renderEdit() {
-  const container = document.getElementById('editContainer');
-  if (!tripData) { container.innerHTML = ''; return; }
-
-  let html = `<div style="padding:8px 4px 16px">
-    <h2 style="font-size:18px">Edit Packing List</h2>
-    <p class="text-sm text-muted" style="margin-top:4px">Drag items to reorder. Use buttons to move between Packing and Optional.</p>
-  </div>`;
-
-  tripData.categories.forEach(cat => {
-    html += `<div class="edit-category-block" id="editcat-${cat.id}">
-      <div class="edit-category-header">
-        <h3>${cat.name}</h3>
-      </div>
-      <div class="edit-items-list" id="editlist-${cat.id}" data-cat-id="${cat.id}">`;
-
-    cat.items.forEach(item => {
-      html += renderEditItemRow(item, cat.id);
-    });
-
-    html += `</div>
-      <div class="add-item-row" style="margin-top:8px">
-        <input type="text" placeholder="Add item to ${cat.name}..." id="addInput-${cat.id}" onkeydown="if(event.key==='Enter')addItemToCategory('${cat.id}')" />
-        <select id="addSection-${cat.id}">
-          <option value="packing">Packing</option>
-          <option value="optional">Optional</option>
-        </select>
-        <button class="btn btn-primary" onclick="addItemToCategory('${cat.id}')">Add</button>
-      </div>
-    </div>`;
-  });
-
-  container.innerHTML = html;
-  initDragAndDrop();
-}
-
-function renderEditItemRow(item, catId) {
-  const sectionLabel = item.section === 'packing'
-    ? `<span class="edit-item-section-badge badge-packing">Packing</span>`
-    : `<span class="edit-item-section-badge badge-optional">Optional</span>`;
-  const toggleLabel = item.section === 'packing' ? 'Move to Optional' : 'Move to Packing';
-  return `<div class="edit-item-row" draggable="true" data-item-id="${item.id}" data-cat-id="${catId}" id="editrow-${item.id}">
-    <span class="drag-handle">⠿</span>
-    <span class="edit-item-name">${item.name}</span>
-    ${sectionLabel}
-    <div class="edit-item-actions">
-      <button class="edit-btn" onclick="toggleItemSection('${catId}','${item.id}')">${toggleLabel}</button>
-      <button class="edit-btn danger" onclick="confirmDeleteItem('${catId}','${item.id}','${escHtml(item.name)}')">✕</button>
-    </div>
-  </div>`;
-}
-
-window.toggleItemSection = function(catId, itemId) {
-  const item = findItem(catId, itemId);
-  if (!item) return;
-  item.section = item.section === 'packing' ? 'optional' : 'packing';
-  save();
-  renderEdit();
-};
-
-window.addItemToCategory = function(catId) {
-  const inp = document.getElementById('addInput-' + catId);
-  const name = inp.value.trim();
-  if (!name) return;
-  const section = document.getElementById('addSection-' + catId).value;
-  const cat = tripData.categories.find(c => c.id === catId);
-  if (!cat) return;
-  cat.items.push({
-    id: uid(),
-    name,
-    quantity: 1,
-    packedQty: 0,
-    checked: false,
-    isCheckbox: true,
-    section
-  });
-  inp.value = '';
-  save();
-  renderEdit();
-};
-
-window.confirmDeleteItem = function(catId, itemId, name) {
-  showConfirm(`Remove "${name}"?`, 'This item will be removed from your list.', () => {
-    const cat = tripData.categories.find(c => c.id === catId);
-    if (!cat) return;
-    cat.items = cat.items.filter(i => i.id !== itemId);
-    save();
-    renderEdit();
-  });
-};
-
-// ── Drag and Drop ──
-function initDragAndDrop() {
-  document.querySelectorAll('.edit-item-row').forEach(row => {
-    row.addEventListener('dragstart', e => {
-      dragSrc = row;
-      row.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    row.addEventListener('dragend', () => {
-      row.classList.remove('dragging');
-      document.querySelectorAll('.edit-item-row').forEach(r => r.classList.remove('drag-over'));
-    });
-    row.addEventListener('dragover', e => {
-      e.preventDefault();
-      if (dragSrc && dragSrc !== row) {
-        document.querySelectorAll('.edit-item-row').forEach(r => r.classList.remove('drag-over'));
-        row.classList.add('drag-over');
-      }
-    });
-    row.addEventListener('drop', e => {
-      e.preventDefault();
-      if (!dragSrc || dragSrc === row) return;
-      const srcItemId = dragSrc.dataset.itemId;
-      const srcCatId = dragSrc.dataset.catId;
-      const tgtItemId = row.dataset.itemId;
-      const tgtCatId = row.dataset.catId;
-      moveItem(srcCatId, srcItemId, tgtCatId, tgtItemId);
-    });
-  });
-}
-
-function moveItem(srcCatId, srcItemId, tgtCatId, tgtItemId) {
-  const srcCat = tripData.categories.find(c => c.id === srcCatId);
-  const tgtCat = tripData.categories.find(c => c.id === tgtCatId);
-  if (!srcCat || !tgtCat) return;
-
-  const srcIdx = srcCat.items.findIndex(i => i.id === srcItemId);
-  const tgtIdx = tgtCat.items.findIndex(i => i.id === tgtItemId);
-  if (srcIdx === -1 || tgtIdx === -1) return;
-
-  const [moved] = srcCat.items.splice(srcIdx, 1);
-  // If moving to different category, update section to match most common in target
-  if (srcCatId !== tgtCatId) {
-    const packingCount = tgtCat.items.filter(i => i.section === 'packing').length;
-    const optCount = tgtCat.items.filter(i => i.section === 'optional').length;
-    moved.section = packingCount >= optCount ? 'packing' : 'optional';
-  }
-  tgtCat.items.splice(tgtIdx, 0, moved);
-  save();
-  renderEdit();
-}
-
-// ── New Trip Confirm ──
-window.confirmNewTrip = function() {
-  showConfirm('Start a new trip?', 'Your current packing list will be replaced.', () => {
-    tripData = null;
-    save();
-    goToSetup();
-  });
-};
-
-// ── Helpers ──
-function findItem(catId, itemId) {
-  const cat = tripData.categories.find(c => c.id === catId);
-  return cat ? cat.items.find(i => i.id === itemId) : null;
-}
-
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-function formatDateRange(start, end) {
-  const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  return fmt(start) + ' – ' + fmt(end);
-}
-
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Modal ──
-let confirmCallback = null;
-function showConfirm(title, msg, cb) {
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMsg').textContent = msg;
-  confirmCallback = cb;
-  document.getElementById('confirmModal').classList.add('open');
-}
-window.closeModal = function() {
-  document.getElementById('confirmModal').classList.remove('open');
-  confirmCallback = null;
-};
-document.getElementById('confirmOkBtn').addEventListener('click', () => {
-  closeModal();
-  if (confirmCallback) confirmCallback();
-});
-document.getElementById('confirmModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('confirmModal')) closeModal();
-});
-
-// ── Start ──
+// ── Start ─────────────────────────────────────────────────────
 boot();
 </script>
 </body>
