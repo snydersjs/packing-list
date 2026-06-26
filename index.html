@@ -617,7 +617,7 @@ body {
   </div>
 
   <!-- Setup panel (collapsible) -->
-  <div class="setup-panel" id="setupPanel">
+  <div class="setup-panel collapsed" id="setupPanel">
     <div class="setup-panel-toggle" onclick="toggleSetup()">
       <span id="setupToggleLabel">Trip Details</span>
       <span class="chevron">▾</span>
@@ -715,7 +715,7 @@ body {
 
 <div class="notes-popover" id="notesPopover">
   <div class="notes-popover-label">Note</div>
-  <textarea id="notesTextarea" placeholder="e.g. blue Vuori, noise-cancelling..." onblur="saveNote()"></textarea>
+  <textarea id="notesTextarea" placeholder="" onblur="saveNote()"></textarea>
 </div>
 </div><!-- #app -->
 
@@ -896,6 +896,7 @@ function render() {
     const panel = document.getElementById('setupPanel');
     panel.classList.remove('collapsed');
     populateSetupForm(null);
+    document.getElementById('setupPanel').classList.remove('collapsed');
     document.getElementById('listBody').innerHTML = '';
     return;
   }
@@ -1091,11 +1092,15 @@ window.toggleSetup = function() {
 
 window.onDatesChange = function() {
   const start = document.getElementById('sStart').value;
+  const endEl = document.getElementById('sEnd');
   if (start) {
-    document.getElementById('sEnd').min = start;
-    // If return is before depart, clear it
-    const end = document.getElementById('sEnd').value;
-    if (end && end < start) document.getElementById('sEnd').value = '';
+    endEl.min = start;
+    // If return is empty or before depart, default to start+6 (1 week)
+    if (!endEl.value || endEl.value < start) {
+      const d = new Date(start + 'T12:00:00');
+      d.setDate(d.getDate() + 6);
+      endEl.value = d.toISOString().split('T')[0];
+    }
   }
   const days = getTripDays();
   if (state.setupType === 'business' && days > 0) populateBizDropdown(days, null);
@@ -1220,6 +1225,7 @@ window.addNewTrip = function() {
   document.getElementById('listBody').innerHTML = '';
   populateSetupForm(null);
   document.getElementById('setupPanel').classList.remove('collapsed');
+  document.getElementById('listBody').innerHTML = '';
 };
 
 window.confirmCloseTab = function(i) {
@@ -1523,7 +1529,7 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Socks',            days+1),
     item('Underwear',        days+1),
     item('Shoes',            1),
-    item('Sandals',          1),
+    item('Sandals',          1, isBiz ? 'optional' : 'packing'),
     item('Belt',             1),
     item('Jacket',           1),
     item('Sweater / Hoodie', 1),
