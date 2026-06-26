@@ -618,9 +618,10 @@ body {
 
   <!-- Setup panel (collapsible) -->
   <div class="setup-panel collapsed" id="setupPanel">
-    <div class="setup-panel-toggle" onclick="toggleSetup()">
-      <span id="setupToggleLabel">Trip Details</span>
-      <span class="chevron">▾</span>
+    <div class="setup-panel-toggle" style="cursor:default">
+      <span id="setupToggleLabel" onclick="toggleSetup()" style="cursor:pointer;flex:1">Trip Details</span>
+      <button class="btn btn-ghost btn-sm" id="markDoneBtn" onclick="markTripDone()" style="display:none;font-size:12px;padding:5px 10px;margin-right:8px">Mark Trip Done</button>
+      <span class="chevron" onclick="toggleSetup()" style="cursor:pointer">▾</span>
     </div>
     <div class="setup-form">
       <div class="setup-grid">
@@ -664,7 +665,7 @@ body {
       </div>
       <div class="setup-actions">
         <button class="btn btn-primary" onclick="generateList()">Generate List</button>
-        <button class="btn btn-ghost btn-sm" id="markDoneBtn" onclick="markTripDone()" style="display:none">Mark Trip Done</button>
+
       </div>
     </div>
   </div>
@@ -915,8 +916,12 @@ function render() {
 
 function renderTabs() {
   const bar = document.getElementById('tabsBar');
+  // Sort by startDate for display, keeping original indices for state ops
+  const sorted = state.trips
+    .map((t, i) => ({ t, i }))
+    .sort((a, b) => (a.t.startDate || '') < (b.t.startDate || '') ? -1 : 1);
   let html = '';
-  state.trips.forEach((t, i) => {
+  sorted.forEach(({ t, i }) => {
     const active = i === state.activeIdx ? 'active' : '';
     html += `<button class="tab ${active}" onclick="switchTab(${i})">
       ${esc(t.destination)}
