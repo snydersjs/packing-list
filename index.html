@@ -246,6 +246,9 @@ body {
 .cat-chevron { font-size: 10px; color: var(--text3); transition: transform 0.2s; margin-left: 6px; }
 .cat-block.collapsed .cat-chevron { transform: rotate(-90deg); }
 .cat-block.collapsed .cat-items { display: none; }
+.cat-block.collapsed .opt-header { display: none; }
+.cat-block.collapsed .opt-items  { display: none; }
+.cat-block.collapsed .opt-add-row { display: none; }
 
 .cat-items {
   background: var(--surface);
@@ -338,6 +341,52 @@ body {
   white-space: nowrap; font-weight: 500;
 }
 .btn-promote:hover { background: var(--optional); color: #fff; }
+
+/* ── Notes popover ── */
+.notes-btn {
+  background: none; border: none;
+  color: var(--text3); cursor: pointer;
+  font-size: 13px; padding: 3px 5px;
+  border-radius: 4px; flex-shrink: 0;
+  line-height: 1;
+}
+.notes-btn:hover { color: var(--accent); background: var(--accent-bg); }
+.notes-btn.has-note { color: var(--accent); }
+.notes-popover {
+  position: fixed; z-index: 150;
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  width: 220px;
+  display: none;
+}
+.notes-popover.open { display: block; }
+.notes-popover textarea {
+  width: 100%; height: 64px; resize: none;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-size: 13px;
+  padding: 6px 8px; font-family: inherit; line-height: 1.4;
+}
+.notes-popover textarea:focus { outline: none; border-color: var(--accent); }
+.notes-popover-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+
+/* ── Optional add row ── */
+.opt-add-row {
+  display: flex; gap: 6px; margin-top: 6px;
+}
+.opt-add-input {
+  flex: 1; padding: 7px 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text); font-size: 13px;
+}
+.opt-add-input:focus { outline: none; border-color: var(--optional); }
+.opt-add-btn {
+  padding: 7px 12px;
+  background: var(--opt-bg); border: 1px solid var(--optional);
+  border-radius: var(--r); color: var(--optional);
+  font-size: 16px; font-weight: 600; cursor: pointer;
+}
+.opt-add-btn:hover { background: var(--optional); color: #fff; }
 
 /* ── Todo section ── */
 .todo-section { margin-top: 8px; }
@@ -438,6 +487,12 @@ body {
 }
 .history-search:focus { outline: none; border-color: var(--accent); }
 .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 15px; pointer-events: none; }
+.search-clear {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text3); font-size: 18px;
+  cursor: pointer; line-height: 1; padding: 2px 4px; border-radius: 4px;
+}
+.search-clear:hover { color: var(--text); background: var(--surface3); }
 .history-list {
   background: var(--surface);
   border-radius: var(--r);
@@ -651,17 +706,22 @@ body {
       <div class="history-search-wrap">
         <span class="search-icon">⌕</span>
         <input type="text" class="history-search" id="historySearch" placeholder="Search destinations..." oninput="renderHistory()" />
+        <button class="search-clear" id="historyClear" onclick="clearHistorySearch()" style="display:none">×</button>
       </div>
       <div id="historyList"></div>
     </div>
   </div>
 </div>
 
+<div class="notes-popover" id="notesPopover">
+  <div class="notes-popover-label">Note</div>
+  <textarea id="notesTextarea" placeholder="e.g. blue Vuori, noise-cancelling..." onblur="saveNote()"></textarea>
+</div>
 </div><!-- #app -->
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, doc, onSnapshot, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 // ── Firebase ──────────────────────────────────────────────────
 const fbConfig = {
@@ -674,896 +734,11 @@ const fbConfig = {
 };
 const fbApp = initializeApp(fbConfig);
 const db    = getFirestore(fbApp);
-const STATE_REF = doc(db, 'packingList', 'currentTrip');
+const STATE_REF   = doc(db, 'packingList', 'currentTrip');
+const HISTORY_REF = doc(db, 'packingList', 'tripHistory');
 
 // ── Trip History (pre-seeded from Excel) ──────────────────────
-const SEEDED_HISTORY = [
-  {
-    "destination": "Costa Mesa, CA",
-    "dates": "Feb 18-23, 2026",
-    "year": "2026"
-  },
-  {
-    "destination": "Simsbury",
-    "dates": "Jan 22 - 26, 2026",
-    "year": "2026"
-  },
-  {
-    "destination": "Costa Rica",
-    "dates": "Dec 13-20, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Tampa",
-    "dates": "Dec 7-10, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Eugene to Denver",
-    "dates": "Nov 20-23, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Sante Fe",
-    "dates": "Nov 8-10, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Orlando",
-    "dates": "Nov 4-7, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Fort Worth",
-    "dates": "Sept 22-25, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Austin, Le Mans",
-    "dates": "Sep 5-8, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Tampa",
-    "dates": "Aug 26-29, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "July 16 - 20, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Italy and Slovenia",
-    "dates": "July 3-12, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Orlando",
-    "dates": "June 2 - 5, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Brownsville",
-    "dates": "May 14 - 18, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Tampa",
-    "dates": "Apr 27 - May 1, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Phoenix",
-    "dates": "Mar 17 - 21, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Utah / AZ",
-    "dates": "Feb 23 - Mar 1, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "Jan 30 - Feb 2, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Oxy move out",
-    "dates": "Jan 17-19, 2025",
-    "year": "2025"
-  },
-  {
-    "destination": "Marketing LT",
-    "dates": "Dec 3-5, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Austin AWS",
-    "dates": "Nov 18-20, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Portugal & Morocco",
-    "dates": "Oct. 28 - Nov. 15, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Orlando",
-    "dates": "Oct 20-24, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Los Angeles",
-    "dates": "Oct 17-20, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Brownsville, TX",
-    "dates": "Sept 27-30, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "Sept 5-8, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Services meeting",
-    "dates": "August 21-23, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Oxy drop off",
-    "dates": "August 15-19, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Broadmoor Conference",
-    "dates": "August 6-8, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "SLO",
-    "dates": "June 13-18, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "April 4-7, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Phoenix",
-    "dates": "March 1-3, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Atlanta",
-    "dates": "Feb 19-23, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "Feb 1-4, 2024",
-    "year": "2024"
-  },
-  {
-    "destination": "Sante Fe",
-    "dates": "Dec 27 - 29, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "Nov 30 - Dec 3, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "Nov 27 - 29, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "Sept 28 - Oct 1, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "London",
-    "dates": "Aug 31 - Sept 9, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "July 20-23, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "CA College Tour",
-    "dates": "May 28-June 4, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "San Francisco, RSA",
-    "dates": "April 24-27, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "April 19-22, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "New Mexico, Arizona",
-    "dates": "March 24-31, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "Atlanta",
-    "dates": "July 26-29, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "Feb. 2-5, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "San Luis Obispo",
-    "dates": "Jan 12-15, 2023",
-    "year": "2023"
-  },
-  {
-    "destination": "Belize",
-    "dates": "Dec 20-28, 2022",
-    "year": "2022"
-  },
-  {
-    "destination": "Cal Poly",
-    "dates": "Nov. 12-15, 2022",
-    "year": "2022"
-  },
-  {
-    "destination": "Atlanta",
-    "dates": "July 26-29, 2022",
-    "year": "2022"
-  },
-  {
-    "destination": "Atlanta",
-    "dates": "July 26-29, 2022",
-    "year": "2022"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "July 29-Aug 9, 2022",
-    "year": "2022"
-  },
-  {
-    "destination": "Atlanta",
-    "dates": "May 30 - June 2, 2022",
-    "year": "2022"
-  },
-  {
-    "destination": "San Francisco",
-    "dates": "Feb 24-27, 2020",
-    "year": "2020"
-  },
-  {
-    "destination": "San Francisco",
-    "dates": "Feb 24-27, 2020",
-    "year": "2020"
-  },
-  {
-    "destination": "Disney/Universal",
-    "dates": "Feb 12-16, 2020",
-    "year": "2020"
-  },
-  {
-    "destination": "Phoenix",
-    "dates": "Feb 7-9, 2020",
-    "year": "2020"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Feb 5-6, 2020",
-    "year": "2020"
-  },
-  {
-    "destination": "Tel Aviv",
-    "dates": "Jan. 27 - Feb 1, 2020",
-    "year": "2020"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Jan 12-13, 2020",
-    "year": "2020"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Dec 10-12, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "College Tour",
-    "dates": "Nov. 24-28, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Nov. 18-22, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "Charleston",
-    "dates": "Nov. 6-11, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Oct. 23-24, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "Australia",
-    "dates": "Sep. 18 - Oct 2, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Sep 11-12, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "Mt Princeton",
-    "dates": "Aug 9-11, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "Las Vegas",
-    "dates": "Aug 6-8, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "Tokyo",
-    "dates": "6/15-6/20, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Apr 24-25, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "Houston",
-    "dates": "Apr. 17-20, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "San Jose",
-    "dates": "Apr. 1-2, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "Tel Aviv/Jerusalem",
-    "dates": "Jan. 26 - Feb3, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Jan 15-17, 2019",
-    "year": "2019"
-  },
-  {
-    "destination": "Ashland",
-    "dates": "Nov 20-24, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Jose",
-    "dates": "Apr. 1-2, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "Simsbury",
-    "dates": "Sept 20-25, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Aug 28-30, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Aug 23-24, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "Las Vegas",
-    "dates": "Aug 7-9, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "Vietnam",
-    "dates": "June 25-30, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "May 29-30, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "May 22-23, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Jose",
-    "dates": "Apr. 1-2, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Jose",
-    "dates": "Apr. 1-2, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Jose",
-    "dates": "Apr. 1-2, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Jose",
-    "dates": "Apr. 1-2, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Feb 21-23, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Jan 29-Feb 1, 2018",
-    "year": "2018"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Dec. 9-13, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "Bangkok",
-    "dates": "Dec. 1-5, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "Eugene",
-    "dates": "Nov. 20-23, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Nov. 1-2, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "London",
-    "dates": "11/28 - 12/2, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Oct. 13-14, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Aug 16-17, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Aug 16-17, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "Italy/London",
-    "dates": "2017",
-    "year": "2017"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Jan 17-19, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "San Francisco",
-    "dates": "Feb 13-16, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "Singapore",
-    "dates": "7/17-7/25, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "San Francisco",
-    "dates": "Feb 13-16, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Jan 17-19, 2017",
-    "year": "2017"
-  },
-  {
-    "destination": "Connecticut",
-    "dates": "12/25 - 1/2, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "London",
-    "dates": "11/28 - 12/2, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Nov. 14-16, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "Austin",
-    "dates": "Oct. 20-24, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "Marseille/Dublin",
-    "dates": "9/24 - 9/30, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "Sept. 15-19, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "San Diego",
-    "dates": "August 23-24, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "Las Vegas",
-    "dates": "August 4-7, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "Singapore",
-    "dates": "7/17-7/25, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "Santa Clara",
-    "dates": "May 11-13, 2016, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "London, Dublin",
-    "dates": "5/1 - 5/7, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "Hawaii",
-    "dates": "3/28-4/6, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "San Francisco",
-    "dates": "February 28 - March 4, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "San Francisco",
-    "dates": "Jan. 27-28 2016, 2016",
-    "year": "2016"
-  },
-  {
-    "destination": "London",
-    "dates": "11/14 - 11/21, 2015",
-    "year": "2015"
-  },
-  {
-    "destination": "London",
-    "dates": "11/14 - 11/21, 2015",
-    "year": "2015"
-  },
-  {
-    "destination": "Derby/London/Dublin",
-    "dates": "8/18 - 8/28, 2015",
-    "year": "2015"
-  },
-  {
-    "destination": "Las Vegas",
-    "dates": "August 4-7, 2015",
-    "year": "2015"
-  },
-  {
-    "destination": "Singapore",
-    "dates": "7/19-7/24, 2015",
-    "year": "2015"
-  },
-  {
-    "destination": "Tokyo",
-    "dates": "6/18-6/24, 2015",
-    "year": "2015"
-  },
-  {
-    "destination": "San Francisco",
-    "dates": "April 19-24, 2015",
-    "year": "2015"
-  },
-  {
-    "destination": "Tokyo",
-    "dates": "3/31-4/5, 2015",
-    "year": "2015"
-  },
-  {
-    "destination": "Universal Orlando",
-    "dates": "Feb 22-25, 2015",
-    "year": "2015"
-  },
-  {
-    "destination": "Seattle",
-    "dates": "Nov. 7-9, 2014, 2014",
-    "year": "2014"
-  },
-  {
-    "destination": "Seattle",
-    "dates": "Nov. 7-9, 2014, 2014",
-    "year": "2014"
-  },
-  {
-    "destination": "Washington D.C.",
-    "dates": "6/21-6/26, 2014",
-    "year": "2014"
-  },
-  {
-    "destination": "Tokyo",
-    "dates": "5/28-5/31, 2014",
-    "year": "2014"
-  },
-  {
-    "destination": "London",
-    "dates": "4/26 - 5/2, 2014",
-    "year": "2014"
-  },
-  {
-    "destination": "San Francisco",
-    "dates": "2014",
-    "year": "2014"
-  },
-  {
-    "destination": "San Jose",
-    "dates": "10/16/13 - 10/19/13, 2013",
-    "year": "2013"
-  },
-  {
-    "destination": "Legoland",
-    "dates": "June 5-9, 2013",
-    "year": "2013"
-  },
-  {
-    "destination": "Fort Lauderdale",
-    "dates": "Feb 15-18, 2013",
-    "year": "2013"
-  },
-  {
-    "destination": "Copenhagen",
-    "dates": "2/2/13 - 2/9/13, 2013",
-    "year": "2013"
-  },
-  {
-    "destination": "Chicago",
-    "dates": "11/19/12 - 11/20/12, 2012",
-    "year": "2012"
-  },
-  {
-    "destination": "New York",
-    "dates": "10/8/12 - 10/11/12, 2012",
-    "year": "2012"
-  },
-  {
-    "destination": "Crested Butte",
-    "dates": "July 19-21, 2012",
-    "year": "2012"
-  },
-  {
-    "destination": "Canon City/Royal Gorge.",
-    "dates": "June 29 - July 1, 2012",
-    "year": "2012"
-  },
-  {
-    "destination": "Washington D.C.",
-    "dates": "May 3-6, 2012",
-    "year": "2012"
-  },
-  {
-    "destination": "Phoenix",
-    "dates": "Nov 10-13, 2011",
-    "year": "2011"
-  },
-  {
-    "destination": "Oregon Roadtrip",
-    "dates": "July 27-August 7th, 2011",
-    "year": "2011"
-  },
-  {
-    "destination": "Yellowstone",
-    "dates": "May 31-June 4, 2011",
-    "year": "2011"
-  },
-  {
-    "destination": "West Simsbury",
-    "dates": "Dec. 23-31, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "Basking Ridge",
-    "dates": "11/3/10 - 11/4/10, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "World Equestrian Games",
-    "dates": "9/29/10 - 10/4/10, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "Glenwood Springs",
-    "dates": "Aug. 12-14, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "Chicago SME Show / Iowa",
-    "dates": "5/18/10 - 5/21/10, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "San Antonio SKO",
-    "dates": "2/2/10 - 2/5/10, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "Cleveland Cust Event",
-    "dates": "4/14/10 - 4/15/10, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "Steamboat",
-    "dates": "Mar. 26-28, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "Legoland",
-    "dates": "Feb 13-16, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "San Antonio SKO",
-    "dates": "2/2/10 - 2/5/10, 2010",
-    "year": "2010"
-  },
-  {
-    "destination": "Hawaii",
-    "dates": "11/15-11/24, 2009",
-    "year": "2009"
-  },
-  {
-    "destination": "Nashville FY10 SKO",
-    "dates": "10/11/09 - 10/15/09, 2009",
-    "year": "2009"
-  },
-  {
-    "destination": "Basking Ridge",
-    "dates": "9/1/09 - 9/3/09, 2009",
-    "year": "2009"
-  },
-  {
-    "destination": "InAAU Orlando",
-    "dates": "May 17-20, 2009",
-    "year": "2009"
-  },
-  {
-    "destination": "AT&T Meeting - Atlanta",
-    "dates": "May 12-13, 2009",
-    "year": "2009"
-  },
-  {
-    "destination": "VoiceCon Orlando",
-    "dates": "March 29 - April 1, 2009",
-    "year": "2009"
-  },
-  {
-    "destination": "Microsoft WPC",
-    "dates": "Nov. 13-15, 2008, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "Escape the Cube St. Louis",
-    "dates": "Nov. 5-6, 2008, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "Becky/Marcus wedding",
-    "dates": "Sept. 24-28, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "Chicago/NYC",
-    "dates": "August 18-21, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "Oregon Roadtrip",
-    "dates": "July 25-August 3rd, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "MS101 Training Redmond",
-    "dates": "July 15-20, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "MSFT Customer Briefing",
-    "dates": "April 23-25, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "Sante Fe > California",
-    "dates": "12/26 - 1/3, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "Basking Ridge",
-    "dates": "2/11/08-2/14/08, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "Basking Ridge",
-    "dates": "1/16/08-1/18/08, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "BT Americas Meeting",
-    "dates": "8/14-8/16, 2007",
-    "year": "2007"
-  },
-  {
-    "destination": "Glasgow, Scotland-Wedding",
-    "dates": "5/9/07-5/14/07, 2007",
-    "year": "2007"
-  },
-  {
-    "destination": "Florida/Disney/Space Center",
-    "dates": "1/13-1/20, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "BT Americas Meeting",
-    "dates": "1/9-1/10, 2008",
-    "year": "2008"
-  },
-  {
-    "destination": "SAPPHIRE 08",
-    "dates": "2008",
-    "year": "2008"
-  },
-  {
-    "destination": "Nag's Head, NC",
-    "dates": "2007",
-    "year": "2007"
-  }
-];
+const SEEDED_HISTORY = []; // Loaded from Firestore on first run
 
 // ── App State ──────────────────────────────────────────────────
 let state = {
@@ -1577,23 +752,119 @@ let dragSrc = null;
 let confirmCb = null;
 
 // ── Boot ──────────────────────────────────────────────────────
+// ── Notes popover ────────────────────────────────────────────
+let noteTarget = null; // { catId, itemId }
+
+window.openNote = function(e, catId, itemId) {
+  e.stopPropagation();
+  const item = findItem(catId, itemId);
+  if (!item) return;
+
+  // If same button clicked again, close
+  if (noteTarget && noteTarget.catId === catId && noteTarget.itemId === itemId) {
+    closeNote();
+    return;
+  }
+  noteTarget = { catId, itemId };
+
+  const pop = document.getElementById('notesPopover');
+  const ta  = document.getElementById('notesTextarea');
+  ta.value  = item.note || '';
+  pop.classList.add('open');
+
+  // Position near the button
+  const btn  = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const popW = 220;
+  let left = rect.right - popW;
+  if (left < 8) left = 8;
+  let top = rect.bottom + 6;
+  if (top + 120 > window.innerHeight) top = rect.top - 126;
+  pop.style.left = left + 'px';
+  pop.style.top  = top  + 'px';
+  ta.focus();
+};
+
+function saveNote() {
+  if (!noteTarget) return;
+  const item = findItem(noteTarget.catId, noteTarget.itemId);
+  if (!item) return;
+  item.note = document.getElementById('notesTextarea').value.trim();
+  save();
+  renderList(state.trips[state.activeIdx]);
+  // Don't close immediately (blur fires before click on popover)
+  setTimeout(closeNote, 150);
+}
+
+function closeNote() {
+  document.getElementById('notesPopover').classList.remove('open');
+  noteTarget = null;
+}
+
+document.addEventListener('click', (e) => {
+  const pop = document.getElementById('notesPopover');
+  if (pop.classList.contains('open') && !pop.contains(e.target)) closeNote();
+});
+
+let isFirstLoad = true;
+
 async function boot() {
+  // Load or seed trip history from Firestore
   try {
-    const snap = await getDoc(STATE_REF);
+    const histSnap = await getDoc(HISTORY_REF);
+    if (histSnap.exists()) {
+      state.history = histSnap.data().entries || [];
+    } else {
+      // First run: seed with Excel history
+      const seeded = [{"d":"Costa Mesa, CA","t":"Feb 18-23, 2026"},{"d":"Simsbury","t":"Jan 22 - 26, 2026"},{"d":"Costa Rica","t":"Dec 13-20, 2025"},{"d":"Tampa","t":"Dec 7-10, 2025"},{"d":"Eugene to Denver","t":"Nov 20-23, 2025"},{"d":"Sante Fe","t":"Nov 8-10, 2025"},{"d":"Orlando","t":"Nov 4-7, 2025"},{"d":"Fort Worth","t":"Sept 22-25, 2025"},{"d":"Austin, Le Mans","t":"Sep 5-8, 2025"},{"d":"Tampa","t":"Aug 26-29, 2025"},{"d":"Eugene","t":"July 16 - 20, 2025"},{"d":"Italy and Slovenia","t":"July 3-12, 2025"},{"d":"Orlando","t":"June 2 - 5, 2025"},{"d":"Brownsville","t":"May 14 - 18, 2025"},{"d":"Tampa","t":"Apr 27 - May 1, 2025"},{"d":"Phoenix","t":"Mar 17 - 21, 2025"},{"d":"Utah / AZ","t":"Feb 23 - Mar 1, 2025"},{"d":"Eugene","t":"Jan 30 - Feb 2, 2025"},{"d":"Oxy move out","t":"Jan 17-19, 2025"},{"d":"Marketing LT","t":"Dec 3-5, 2024"},{"d":"Austin AWS","t":"Nov 18-20, 2024"},{"d":"Portugal & Morocco","t":"Oct. 28 - Nov. 15, 2024"},{"d":"Orlando","t":"Oct 20-24, 2024"},{"d":"Los Angeles","t":"Oct 17-20, 2024"},{"d":"Brownsville, TX","t":"Sept 27-30, 2024"},{"d":"Eugene","t":"Sept 5-8, 2024"},{"d":"Services meeting","t":"August 21-23, 2024"},{"d":"Oxy drop off","t":"August 15-19, 2024"},{"d":"Broadmoor Conference","t":"August 6-8, 2024"},{"d":"SLO","t":"June 13-18, 2024"},{"d":"Eugene","t":"April 4-7, 2024"},{"d":"Phoenix","t":"March 1-3, 2024"},{"d":"Atlanta","t":"Feb 19-23, 2024"},{"d":"Eugene","t":"Feb 1-4, 2024"},{"d":"Sante Fe","t":"Dec 27 - 29, 2023"},{"d":"Eugene","t":"Nov 30 - Dec 3, 2023"},{"d":"Eugene","t":"Nov 27 - 29, 2023"},{"d":"Eugene","t":"Sept 28 - Oct 1, 2023"},{"d":"London","t":"Aug 31 - Sept 9, 2023"},{"d":"Eugene","t":"July 20-23, 2023"},{"d":"CA College Tour","t":"May 28-June 4, 2023"},{"d":"San Francisco, RSA","t":"April 24-27, 2023"},{"d":"Eugene","t":"April 19-22, 2023"},{"d":"New Mexico, Arizona","t":"March 24-31, 2023"},{"d":"Atlanta","t":"July 26-29, 2023"},{"d":"Eugene","t":"Feb. 2-5, 2023"},{"d":"San Luis Obispo","t":"Jan 12-15, 2023"},{"d":"Belize","t":"Dec 20-28, 2022"},{"d":"Cal Poly","t":"Nov. 12-15, 2022"},{"d":"Atlanta","t":"July 26-29, 2022"},{"d":"Atlanta","t":"July 26-29, 2022"},{"d":"San Diego","t":"July 29-Aug 9, 2022"},{"d":"Atlanta","t":"May 30 - June 2, 2022"},{"d":"San Francisco","t":"Feb 24-27, 2020"},{"d":"San Francisco","t":"Feb 24-27, 2020"},{"d":"Disney/Universal","t":"Feb 12-16, 2020"},{"d":"Phoenix","t":"Feb 7-9, 2020"},{"d":"San Diego","t":"Feb 5-6, 2020"},{"d":"Tel Aviv","t":"Jan. 27 - Feb 1, 2020"},{"d":"San Diego","t":"Jan 12-13, 2020"},{"d":"San Diego","t":"Dec 10-12, 2019"},{"d":"College Tour","t":"Nov. 24-28, 2019"},{"d":"San Diego","t":"Nov. 18-22, 2019"},{"d":"Charleston","t":"Nov. 6-11, 2019"},{"d":"San Diego","t":"Oct. 23-24, 2019"},{"d":"Australia","t":"Sep. 18 - Oct 2, 2019"},{"d":"San Diego","t":"Sep 11-12, 2019"},{"d":"Mt Princeton","t":"Aug 9-11, 2019"},{"d":"Las Vegas","t":"Aug 6-8, 2019"},{"d":"Tokyo","t":"6/15-6/20, 2019"},{"d":"San Diego","t":"Apr 24-25, 2019"},{"d":"Houston","t":"Apr. 17-20, 2019"},{"d":"San Jose","t":"Apr. 1-2, 2019"},{"d":"Tel Aviv/Jerusalem","t":"Jan. 26 - Feb3, 2019"},{"d":"San Diego","t":"Jan 15-17, 2019"},{"d":"Ashland","t":"Nov 20-24, 2018"},{"d":"San Jose","t":"Apr. 1-2, 2018"},{"d":"Simsbury","t":"Sept 20-25, 2018"},{"d":"San Diego","t":"Aug 28-30, 2018"},{"d":"San Diego","t":"Aug 23-24, 2018"},{"d":"Las Vegas","t":"Aug 7-9, 2018"},{"d":"Vietnam","t":"June 25-30, 2018"},{"d":"San Diego","t":"May 29-30, 2018"},{"d":"San Diego","t":"May 22-23, 2018"},{"d":"San Jose","t":"Apr. 1-2, 2018"},{"d":"San Jose","t":"Apr. 1-2, 2018"},{"d":"San Jose","t":"Apr. 1-2, 2018"},{"d":"San Jose","t":"Apr. 1-2, 2018"},{"d":"San Diego","t":"Feb 21-23, 2018"},{"d":"San Diego","t":"Jan 29-Feb 1, 2018"},{"d":"San Diego","t":"Dec. 9-13, 2017"},{"d":"Bangkok","t":"Dec. 1-5, 2017"},{"d":"Eugene","t":"Nov. 20-23, 2017"},{"d":"San Diego","t":"Nov. 1-2, 2017"},{"d":"London","t":"11/28 - 12/2, 2017"},{"d":"San Diego","t":"Oct. 13-14, 2017"},{"d":"San Diego","t":"Aug 16-17, 2017"},{"d":"San Diego","t":"Aug 16-17, 2017"},{"d":"Italy/London","t":"2017"},{"d":"San Diego","t":"Jan 17-19, 2017"},{"d":"San Francisco","t":"Feb 13-16, 2017"},{"d":"Singapore","t":"7/17-7/25, 2017"},{"d":"San Francisco","t":"Feb 13-16, 2017"},{"d":"San Diego","t":"Jan 17-19, 2017"},{"d":"Connecticut","t":"12/25 - 1/2, 2016"},{"d":"London","t":"11/28 - 12/2, 2016"},{"d":"San Diego","t":"Nov. 14-16, 2016"},{"d":"Austin","t":"Oct. 20-24, 2016"},{"d":"Marseille/Dublin","t":"9/24 - 9/30, 2016"},{"d":"San Diego","t":"Sept. 15-19, 2016"},{"d":"San Diego","t":"August 23-24, 2016"},{"d":"Las Vegas","t":"August 4-7, 2016"},{"d":"Singapore","t":"7/17-7/25, 2016"},{"d":"Santa Clara","t":"May 11-13, 2016, 2016"},{"d":"London, Dublin","t":"5/1 - 5/7, 2016"},{"d":"Hawaii","t":"3/28-4/6, 2016"},{"d":"San Francisco","t":"February 28 - March 4, 2016"},{"d":"San Francisco","t":"Jan. 27-28 2016, 2016"},{"d":"London","t":"11/14 - 11/21, 2015"},{"d":"London","t":"11/14 - 11/21, 2015"},{"d":"Derby/London/Dublin","t":"8/18 - 8/28, 2015"},{"d":"Las Vegas","t":"August 4-7, 2015"},{"d":"Singapore","t":"7/19-7/24, 2015"},{"d":"Tokyo","t":"6/18-6/24, 2015"},{"d":"San Francisco","t":"April 19-24, 2015"},{"d":"Tokyo","t":"3/31-4/5, 2015"},{"d":"Universal Orlando","t":"Feb 22-25, 2015"},{"d":"Seattle","t":"Nov. 7-9, 2014, 2014"},{"d":"Seattle","t":"Nov. 7-9, 2014, 2014"},{"d":"Washington D.C.","t":"6/21-6/26, 2014"},{"d":"Tokyo","t":"5/28-5/31, 2014"},{"d":"London","t":"4/26 - 5/2, 2014"},{"d":"San Francisco","t":"2014"},{"d":"San Jose","t":"10/16/13 - 10/19/13, 2013"},{"d":"Legoland","t":"June 5-9, 2013"},{"d":"Fort Lauderdale","t":"Feb 15-18, 2013"},{"d":"Copenhagen","t":"2/2/13 - 2/9/13, 2013"},{"d":"Chicago","t":"11/19/12 - 11/20/12, 2012"},{"d":"New York","t":"10/8/12 - 10/11/12, 2012"},{"d":"Crested Butte","t":"July 19-21, 2012"},{"d":"Canon City/Royal Gorge.","t":"June 29 - July 1, 2012"},{"d":"Washington D.C.","t":"May 3-6, 2012"},{"d":"Phoenix","t":"Nov 10-13, 2011"},{"d":"Oregon Roadtrip","t":"July 27-August 7th, 2011"},{"d":"Yellowstone","t":"May 31-June 4, 2011"},{"d":"West Simsbury","t":"Dec. 23-31, 2010"},{"d":"Basking Ridge","t":"11/3/10 - 11/4/10, 2010"},{"d":"World Equestrian Games","t":"9/29/10 - 10/4/10, 2010"},{"d":"Glenwood Springs","t":"Aug. 12-14, 2010"},{"d":"Chicago SME Show / Iowa","t":"5/18/10 - 5/21/10, 2010"},{"d":"San Antonio SKO","t":"2/2/10 - 2/5/10, 2010"},{"d":"Cleveland Cust Event","t":"4/14/10 - 4/15/10, 2010"},{"d":"Steamboat","t":"Mar. 26-28, 2010"},{"d":"Legoland","t":"Feb 13-16, 2010"},{"d":"San Antonio SKO","t":"2/2/10 - 2/5/10, 2010"},{"d":"Hawaii","t":"11/15-11/24, 2009"},{"d":"Nashville FY10 SKO","t":"10/11/09 - 10/15/09, 2009"},{"d":"Basking Ridge","t":"9/1/09 - 9/3/09, 2009"},{"d":"InAAU Orlando","t":"May 17-20, 2009"},{"d":"AT&T Meeting - Atlanta","t":"May 12-13, 2009"},{"d":"VoiceCon Orlando","t":"March 29 - April 1, 2009"},{"d":"Microsoft WPC","t":"Nov. 13-15, 2008, 2008"},{"d":"Escape the Cube St. Louis","t":"Nov. 5-6, 2008, 2008"},{"d":"Becky/Marcus wedding","t":"Sept. 24-28, 2008"},{"d":"Chicago/NYC","t":"August 18-21, 2008"},{"d":"Oregon Roadtrip","t":"July 25-August 3rd, 2008"},{"d":"MS101 Training Redmond","t":"July 15-20, 2008"},{"d":"MSFT Customer Briefing","t":"April 23-25, 2008"},{"d":"Sante Fe > California","t":"12/26 - 1/3, 2008"},{"d":"Basking Ridge","t":"2/11/08-2/14/08, 2008"},{"d":"Basking Ridge","t":"1/16/08-1/18/08, 2008"},{"d":"BT Americas Meeting","t":"8/14-8/16, 2007"},{"d":"Glasgow, Scotland-Wedding","t":"5/9/07-5/14/07, 2007"},{"d":"Florida/Disney/Space Center","t":"1/13-1/20, 2008"},{"d":"BT Americas Meeting","t":"1/9-1/10, 2008"},{"d":"SAPPHIRE 08","t":"2008"},{"d":"Nag's Head, NC","t":"2007"}];
+      // Expand minified keys to full format
+      state.history = seeded.map(e => ({ destination: e.d, dates: e.t }));
+      await setDoc(HISTORY_REF, { entries: state.history });
+    }
+  } catch(e) {
+    console.error('History load error', e);
+  }
+
+  onSnapshot(STATE_REF, (snap) => {
     if (snap.exists()) {
       const saved = snap.data();
-      state.trips   = saved.trips   || [];
-      state.history = saved.history || [];
-      state.activeIdx = Math.min(saved.activeIdx || 0, Math.max(0, state.trips.length - 1));
+      // On subsequent updates, preserve activeIdx if it's still valid
+      const newTrips = saved.trips || [];
+      if (isFirstLoad) {
+        state.trips   = newTrips;
+        state.activeIdx = Math.min(saved.activeIdx || 0, Math.max(0, newTrips.length - 1));
+      } else {
+        // Remote update: merge in new data but keep current tab if still valid
+        state.trips   = newTrips;
+        state.activeIdx = Math.min(state.activeIdx, Math.max(0, newTrips.length - 1));
+      }
+    } else {
+      state.trips   = [];
+      state.history = [];
+      state.activeIdx = 0;
     }
-    // Merge seeded history (at the back, most recent first in render)
-    // history stored most-recent-first; seeded entries go at the end
-    render();
-  } catch(e) {
-    console.error(e);
+    if (isFirstLoad) {
+      document.getElementById('loader').classList.add('gone');
+      isFirstLoad = false;
+      render();
+    } else {
+      // Only re-render the list/tabs; don't disturb an in-progress setup form
+      const setupOpen = !document.getElementById('setupPanel').classList.contains('collapsed');
+      const activeView = document.querySelector('.view.active')?.id;
+      if (activeView === 'viewList') {
+        renderTabs();
+        if (state.trips[state.activeIdx]) renderList(state.trips[state.activeIdx]);
+      } else if (activeView === 'viewEdit') {
+        // leave edit undisturbed
+      } else {
+        render();
+      }
+    }
+  }, (err) => {
+    console.error(err);
+    document.getElementById('loader').classList.add('gone');
     alert('Could not connect to database.');
-  }
-  document.getElementById('loader').classList.add('gone');
+  });
 }
 
 async function save() {
@@ -1680,15 +951,23 @@ function renderList(trip) {
     [...unpacked, ...packed].forEach(item => { html += itemRowHtml(item, cat.id); });
     html += `</div>`;
 
-    if (optional.length) {
-      html += `<div class="opt-header">Optional</div><div class="opt-items">`;
-      optional.forEach(item => {
-        html += `<div class="opt-row">
-          <span class="opt-name">${esc(item.name)}</span>
-          <button class="btn-promote" onclick="promoteItem('${cat.id}','${item.id}')">Add to list</button>
-        </div>`;
-      });
-      html += `</div>`;
+    if (optional.length || true) { // always show optional section so freeform add is accessible
+      const hasOpt = optional.length > 0;
+      html += `<div class="opt-header">Optional</div>`;
+      if (hasOpt) {
+        html += `<div class="opt-items">`;
+        optional.forEach(optItem => {
+          html += `<div class="opt-row">
+            <span class="opt-name">${esc(optItem.name)}</span>
+            <button class="btn-promote" onclick="promoteItem('${cat.id}','${optItem.id}')">Add to list</button>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      html += `<div class="opt-add-row">
+        <input type="text" class="opt-add-input" placeholder="Add optional item..." id="optadd-${cat.id}" onkeydown="if(event.key==='Enter')addOptionalItem('${cat.id}',this)" />
+        <button class="opt-add-btn" onclick="addOptionalItem('${cat.id}',document.getElementById('optadd-${cat.id}'))">+</button>
+      </div>`;
     }
     html += `</div>`; // cat-block
   });
@@ -1751,6 +1030,7 @@ function itemRowHtml(item, catId) {
   const leftOpts  = buildLeftOpts(qtp);
   const rightOpts = buildRightOpts(qtp, qpd);
 
+  const hasNote = !!(item.note && item.note.trim());
   return `<div class="${cls}" data-item-id="${item.id}" data-cat-id="${catId}">
     <div class="qty-wrap">
       <div class="qty-custom-wrap">
@@ -1763,7 +1043,8 @@ function itemRowHtml(item, catId) {
         <input type="number" class="qty-custom-input" id="rc-${item.id}" min="0" onblur="commitCustomRight('${catId}','${item.id}',this)" onkeydown="if(event.key==='Enter')this.blur()" />
       </div>
     </div>
-    <span class="item-name">${esc(item.name)}</span>
+    <span class="item-name">${esc(item.name)}${hasNote ? `<span style="font-size:11px;color:var(--text3);margin-left:5px;font-style:italic">${esc(item.note)}</span>` : ''}</span>
+    <button class="notes-btn ${hasNote?'has-note':''}" onclick="openNote(event,'${catId}','${item.id}')" title="Note">✎</button>
   </div>`;
 }
 
@@ -1783,22 +1064,29 @@ function populateSetupForm(trip) {
     }
   } else {
     document.getElementById('sDestination').value = '';
-    // Default depart to start of current week (Sunday)
-    const today = new Date();
-    const sunday = new Date(today);
-    sunday.setDate(today.getDate() - today.getDay());
-    const sundayStr = sunday.toISOString().split('T')[0];
-    document.getElementById('sStart').value = sundayStr;
-    document.getElementById('sStart').min   = sundayStr;
-    document.getElementById('sEnd').value   = '';
+    applyDefaultDates();
     selType('personal', false);
     selMode('air', false);
     onDatesChange();
   }
 }
 
+function applyDefaultDates() {
+  const today = new Date();
+  const sunday = new Date(today);
+  sunday.setDate(today.getDate() - today.getDay());
+  const sundayStr = sunday.toISOString().split('T')[0];
+  const startEl = document.getElementById('sStart');
+  if (!startEl.value) {
+    startEl.value = sundayStr;
+    startEl.min   = sundayStr;
+    document.getElementById('sEnd').min = sundayStr;
+  }
+}
+
 window.toggleSetup = function() {
   document.getElementById('setupPanel').classList.toggle('collapsed');
+  applyDefaultDates();
 };
 
 window.onDatesChange = function() {
@@ -1887,7 +1175,8 @@ window.generateList = function() {
     todos: [
       { id: uid(), text: 'Pack bags',               done: false },
       { id: uid(), text: 'Charge devices',           done: false },
-      { id: uid(), text: 'Check weather forecast',   done: false }
+      { id: uid(), text: 'Check weather forecast',   done: false },
+      { id: uid(), text: 'Download shows',           done: false }
     ]
   };
 
@@ -1950,7 +1239,9 @@ window.markTripDone = function() {
     state.history.unshift({ destination: trip.destination, dates: fmtDateRange(trip.startDate, trip.endDate) });
     state.trips.splice(state.activeIdx, 1);
     state.activeIdx = Math.min(state.activeIdx, Math.max(0, state.trips.length - 1));
-    save(); render();
+    save();
+    setDoc(HISTORY_REF, { entries: state.history }).catch(e => console.error('History save error', e));
+    render();
   });
 };
 
@@ -1960,7 +1251,12 @@ window.toggleCat = function(id) {
   if (el) el.classList.toggle('collapsed');
 };
 
+function collapseSetup() {
+  document.getElementById('setupPanel').classList.add('collapsed');
+}
+
 window.onLeftQty = function(catId, itemId, sel) {
+  collapseSetup();
   if (sel.value === '__custom') {
     const inp = document.getElementById('lc-' + itemId);
     inp.classList.add('open');
@@ -1991,6 +1287,7 @@ window.commitCustomLeft = function(catId, itemId, inp) {
 };
 
 window.onRightQty = function(catId, itemId, sel) {
+  collapseSetup();
   if (sel.value === '__custom') {
     const inp = document.getElementById('rc-' + itemId);
     inp.classList.add('open');
@@ -2015,6 +1312,16 @@ window.commitCustomRight = function(catId, itemId, inp) {
   save(); renderList(state.trips[state.activeIdx]);
 };
 
+window.addOptionalItem = function(catId, inp) {
+  const name = inp.value.trim();
+  if (!name) return;
+  const cat = findCat(catId);
+  if (!cat) return;
+  cat.items.push({ id: uid(), name, quantity: 1, packedQty: 0, section: 'optional' });
+  inp.value = '';
+  save(); renderList(state.trips[state.activeIdx]);
+};
+
 window.promoteItem = function(catId, itemId) {
   const item = findItem(catId, itemId);
   if (!item) return;
@@ -2024,6 +1331,7 @@ window.promoteItem = function(catId, itemId) {
 };
 
 window.toggleTodo = function(id, done) {
+  collapseSetup();
   const trip = state.trips[state.activeIdx];
   const t = trip.todos.find(x => x.id === id);
   if (t) { t.done = done; save(); renderList(trip); }
@@ -2142,10 +1450,16 @@ function moveItemDrop(sCatId, sItemId, tCatId, tItemId) {
 }
 
 // ── History ───────────────────────────────────────────────────
+window.clearHistorySearch = function() {
+  document.getElementById('historySearch').value = '';
+  document.getElementById('historyClear').style.display = 'none';
+  renderHistory();
+};
+
 window.renderHistory = function() {
   const q = (document.getElementById('historySearch').value || '').toLowerCase();
-  // Combine: user-archived trips first (most recent), then seeded history
-  const all = [...state.history, ...SEEDED_HISTORY];
+  document.getElementById('historyClear').style.display = q ? '' : 'none';
+  const all = state.history;
   const filtered = q ? all.filter(h => h.destination.toLowerCase().includes(q)) : all;
 
   if (!filtered.length) {
@@ -2197,23 +1511,26 @@ document.getElementById('confirmOverlay').addEventListener('click', e => { if (e
 // ── Default categories builder ────────────────────────────────
 function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
   function item(name, qty, section='packing') {
-    return { id: uid(), name, quantity: qty, packedQty: 0, section };
+    return { id: uid(), name, quantity: Math.max(1, qty || 1), packedQty: 0, section };
   }
   const cats = [];
 
   // Casual Clothes
   cats.push({ id: uid(), name: 'Casual Clothes', items: [
-    item('Shirts',         days),
-    item('Pants',          Math.ceil(days/2)),
-    item('Socks',          days+1),
-    item('Underwear',      days+1),
-    item('Shoes',          1),
-    item('Jacket',         1),
+    item('Shirts',           days),
+    item('Pants',            Math.ceil(days/2)),
+    item('Shorts',           Math.ceil(days/2)),
+    item('Socks',            days+1),
+    item('Underwear',        days+1),
+    item('Shoes',            1),
+    item('Sandals',          1),
+    item('Belt',             1),
+    item('Jacket',           1),
     item('Sweater / Hoodie', 1),
-    item('Shorts',         Math.ceil(days/2)),
-    item('Sandals',        1, 'optional'),
-    item('Sunglasses',     1),
-    item('Laundry Bag',    1),
+    item('Sunglasses',       1),
+    item('Laundry Bag',      1),
+    item('Long-Sleeve Shirt', 1, 'optional'),
+    item('Eye Mask',          1, 'optional'),
   ]});
 
   // Dress Clothes (business)
@@ -2240,7 +1557,7 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Watch Charger',     1),
     item('Portable Charger',  1),
     item('Headphones',        1),
-    item('Book',              1, 'optional'),
+    item('Travel Charger',  1, 'optional'),
     item('Car Charger',     1, 'optional'),
     item('Car Phone Mount', 1, 'optional'),
   ]});
@@ -2270,18 +1587,24 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Clippers',          1),
     item('Q-tips',            1),
     item('Tissues',           1),
+    item('Lens Wipes',        1),
     item('Sunscreen',         1, 'optional'),
     item('Medications',       1),
   ]});
 
   // Travel & Documents
   cats.push({ id: uid(), name: 'Travel & Documents', items: [
+    item('Book',               1, 'optional'),
     item('Wallet',            1),
     item('Passport / ID',     1),
     item('Snacks',            1),
+    item('Water Bottle',      1),
     item('Umbrella',          1, 'optional'),
     item('Boarding Pass',     1, 'optional'),
     item('Membership Cards',  1, 'optional'),
+    item('Electrolytes',      1, 'optional'),
+    item('Data Plans',        1, 'optional'),
+    item('Fans',              1, 'optional'),
   ]});
 
   // Bags
@@ -2290,6 +1613,7 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Backpack',   1),
     item('Suitcase',   1, 'optional'),
     item('Duffel Bag', 1, 'optional'),
+    item('Airtags',    1, 'optional'),
   ]});
 
   // Car items
