@@ -807,6 +807,7 @@ document.addEventListener('click', (e) => {
 });
 
 let isFirstLoad = true;
+let isSaving = false;
 
 async function boot() {
   // Load or seed trip history from Firestore
@@ -848,8 +849,9 @@ async function boot() {
       isFirstLoad = false;
       render();
     } else {
+      // Skip re-render if we just saved (our own write triggered this snapshot)
+      if (isSaving) return;
       // Only re-render the list/tabs; don't disturb an in-progress setup form
-      const setupOpen = !document.getElementById('setupPanel').classList.contains('collapsed');
       const activeView = document.querySelector('.view.active')?.id;
       if (activeView === 'viewList') {
         renderTabs();
@@ -868,8 +870,10 @@ async function boot() {
 }
 
 async function save() {
-  try { await setDoc(STATE_REF, { trips: state.trips, history: state.history, activeIdx: state.activeIdx }); }
+  isSaving = true;
+  try { await setDoc(STATE_REF, { trips: state.trips, activeIdx: state.activeIdx }); }
   catch(e) { console.error(e); }
+  finally { setTimeout(() => { isSaving = false; }, 1000); }
 }
 
 // ── Views ─────────────────────────────────────────────────────
