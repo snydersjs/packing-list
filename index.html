@@ -791,20 +791,31 @@ function saveNote() {
   const item = findItem(noteTarget.catId, noteTarget.itemId);
   if (!item) return;
   item.note = document.getElementById('notesTextarea').value.trim();
+  noteTarget = null;
+  document.getElementById('notesPopover').classList.remove('open');
   save();
   renderList(state.trips[state.activeIdx]);
-  // Don't close immediately (blur fires before click on popover)
-  setTimeout(closeNote, 150);
 }
 
 function closeNote() {
-  document.getElementById('notesPopover').classList.remove('open');
+  // Save before closing if there's an active note
+  const ta = document.getElementById('notesTextarea');
+  if (noteTarget && ta) {
+    const item = findItem(noteTarget.catId, noteTarget.itemId);
+    if (item) item.note = ta.value.trim();
+    save();
+  }
   noteTarget = null;
+  document.getElementById('notesPopover').classList.remove('open');
 }
 
 document.addEventListener('click', (e) => {
   const pop = document.getElementById('notesPopover');
-  if (pop.classList.contains('open') && !pop.contains(e.target)) closeNote();
+  if (pop.classList.contains('open') && !pop.contains(e.target) && !e.target.classList.contains('notes-btn')) {
+    closeNote();
+    // Re-render only if we had a note target
+    if (state.trips[state.activeIdx]) renderList(state.trips[state.activeIdx]);
+  }
 });
 
 let isFirstLoad = true;
@@ -1624,7 +1635,7 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Membership Cards',  1, 'optional'),
     item('Electrolytes',      1, 'optional'),
     item('Data Plans',        1, 'optional'),
-    item('Fans',              1, 'optional'),
+    item('Fan',               1, 'optional'),
   ]});
 
   // Bags
@@ -1640,7 +1651,7 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
   if (isCar) {
     const carItems = [
       item('Water',          1),
-      item('Maps / GPS',     1, 'optional'),
+      item('Map',            1, 'optional'),
       item('Paper Towels',   1, 'optional'),
     ];
     if (isWinter) carItems.push(
