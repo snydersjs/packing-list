@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Packing List</title>
+<link rel="icon" type="image/png" href="packing-list-icon.png">
+<link rel="apple-touch-icon" href="packing-list-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pack">
+<meta name="theme-color" content="#0F1923">
 <style>
 :root {
   --bg:        #0F1923;
@@ -671,7 +677,893 @@ const db    = getFirestore(fbApp);
 const STATE_REF = doc(db, 'packingList', 'currentTrip');
 
 // ── Trip History (pre-seeded from Excel) ──────────────────────
-const SEEDED_HISTORY = [{"destination":"Nag's Head, NC","dates":""},{"destination":"SAPPHIRE 08","dates":""},{"destination":"BT Americas Meeting","dates":"1/9-1/10"},{"destination":"Florida/Disney/Space Center","dates":"1/13-1/20"},{"destination":"Glasgow, Scotland-Wedding","dates":"5/9/07-5/14/07"},{"destination":"BT Americas Meeting","dates":"8/14-8/16"},{"destination":"Basking Ridge","dates":"1/16/08-1/18/08"},{"destination":"Basking Ridge","dates":"2/11/08-2/14/08"},{"destination":"Sante Fe > California","dates":"12/26 - 1/3"},{"destination":"MSFT Customer Briefing","dates":"April 23-25"},{"destination":"MS101 Training Redmond","dates":"July 15-20"},{"destination":"Oregon Roadtrip","dates":"July 25-August 3rd"},{"destination":"Chicago/NYC","dates":"August 18-21"},{"destination":"Becky/Marcus wedding","dates":"Sept. 24-28"},{"destination":"Escape the Cube St. Louis","dates":"Nov. 5-6, 2008"},{"destination":"Microsoft WPC","dates":"Nov. 13-15, 2008"},{"destination":"VoiceCon Orlando","dates":"March 29 - April 1"},{"destination":"AT&T Meeting - Atlanta","dates":"May 12-13"},{"destination":"InAAU Orlando","dates":"May 17-20"},{"destination":"Basking Ridge","dates":"9/1/09 - 9/3/09"},{"destination":"Nashville FY10 SKO","dates":"10/11/09 - 10/15/09"},{"destination":"Hawaii","dates":"11/15-11/24"},{"destination":"San Antonio SKO","dates":"2/2/10 - 2/5/10"},{"destination":"Legoland","dates":"Feb 13-16"},{"destination":"Steamboat","dates":"Mar. 26-28"},{"destination":"Cleveland Cust Event","dates":"4/14/10 - 4/15/10"},{"destination":"San Antonio SKO","dates":"2/2/10 - 2/5/10"},{"destination":"Chicago SME Show / Iowa","dates":"5/18/10 - 5/21/10"},{"destination":"Glenwood Springs","dates":"Aug. 12-14"},{"destination":"World Equestrian Games","dates":"9/29/10 - 10/4/10"},{"destination":"Basking Ridge","dates":"11/3/10 - 11/4/10"},{"destination":"West Simsbury","dates":"Dec. 23-31"},{"destination":"Yellowstone","dates":"May 31-June 4"},{"destination":"Oregon Roadtrip","dates":"July 27-August 7th"},{"destination":"Phoenix","dates":"Nov 10-13"},{"destination":"Washington D.C.","dates":"May 3-6"},{"destination":"Canon City/Royal Gorge.","dates":"June 29 - July 1"},{"destination":"Crested Butte","dates":"July 19-21"},{"destination":"New York","dates":"10/8/12 - 10/11/12"},{"destination":"Chicago","dates":"11/19/12 - 11/20/12"},{"destination":"Copenhagen","dates":"2/2/13  - 2/9/13"},{"destination":"Fort Lauderdale","dates":"Feb 15-18"},{"destination":"Legoland","dates":"June 5-9"},{"destination":"San Jose","dates":"10/16/13 - 10/19/13"},{"destination":"San Francisco","dates":""},{"destination":"London","dates":"4/26 - 5/2"},{"destination":"Tokyo","dates":"5/28-5/31"},{"destination":"Washington D.C.","dates":"6/21-6/26"},{"destination":"Seattle","dates":"Nov. 7-9, 2014"},{"destination":"Seattle","dates":"Nov. 7-9, 2014"},{"destination":"Universal Orlando","dates":"Feb 22-25"},{"destination":"Tokyo","dates":"3/31-4/5"},{"destination":"San Francisco","dates":"April 19-24"},{"destination":"Tokyo","dates":"6/18-6/24"},{"destination":"Singapore","dates":"7/19-7/24"},{"destination":"Las Vegas","dates":"August 4-7"},{"destination":"Derby/London/Dublin","dates":"8/18 - 8/28"},{"destination":"London","dates":"11/14 - 11/21"},{"destination":"London","dates":"11/14 - 11/21"},{"destination":"San Francisco","dates":"Jan. 27-28 2016"},{"destination":"San Francisco","dates":"February 28 - March 4"},{"destination":"Hawaii","dates":"3/28-4/6"},{"destination":"London, Dublin","dates":"5/1 - 5/7"},{"destination":"Santa Clara","dates":"May 11-13, 2016"},{"destination":"Singapore","dates":"7/17-7/25"},{"destination":"Las Vegas","dates":"August 4-7"},{"destination":"San Diego","dates":"August 23-24"},{"destination":"San Diego","dates":"Sept. 15-19"},{"destination":"Marseille/Dublin","dates":"9/24 - 9/30"},{"destination":"Austin","dates":"Oct. 20-24"},{"destination":"San Diego","dates":"Nov. 14-16"},{"destination":"London","dates":"11/28 - 12/2"},{"destination":"Connecticut","dates":"12/25 - 1/2"},{"destination":"San Diego","dates":"Jan 17-19"},{"destination":"San Francisco","dates":"Feb 13-16"},{"destination":"Singapore","dates":"7/17-7/25"},{"destination":"San Francisco","dates":"Feb 13-16"},{"destination":"San Diego","dates":"Jan 17-19"},{"destination":"Italy/London","dates":""},{"destination":"San Diego","dates":"Aug 16-17"},{"destination":"San Diego","dates":"Aug 16-17"},{"destination":"San Diego","dates":"Oct. 13-14"},{"destination":"London","dates":"11/28 - 12/2"},{"destination":"San Diego","dates":"Nov. 1-2"},{"destination":"Eugene","dates":"Nov. 20-23"},{"destination":"Bangkok","dates":"Dec. 1-5"},{"destination":"San Diego","dates":"Dec. 9-13"},{"destination":"San Diego","dates":"Jan 29-Feb 1"},{"destination":"San Diego","dates":"Feb 21-23"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"San Diego","dates":"May 22-23"},{"destination":"San Diego","dates":"May 29-30"},{"destination":"Vietnam","dates":"June 25-30"},{"destination":"Las Vegas","dates":"Aug 7-9"},{"destination":"San Diego","dates":"Aug 23-24"},{"destination":"San Diego","dates":"Aug 28-30"},{"destination":"Simsbury","dates":"Sept 20-25"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"Ashland","dates":"Nov 20-24"},{"destination":"San Diego","dates":"Jan 15-17"},{"destination":"Tel Aviv/Jerusalem","dates":"Jan. 26 - Feb3"},{"destination":"San Jose","dates":"Apr. 1-2"},{"destination":"Houston","dates":"Apr. 17-20"},{"destination":"San Diego","dates":"Apr 24-25"},{"destination":"Tokyo","dates":"6/15-6/20"},{"destination":"Las Vegas","dates":"Aug 6-8"},{"destination":"Mt Princeton","dates":"Aug 9-11"},{"destination":"San Diego","dates":"Sep 11-12"},{"destination":"Australia","dates":"Sep. 18 - Oct 2"},{"destination":"San Diego","dates":"Oct. 23-24"},{"destination":"Charleston","dates":"Nov. 6-11"},{"destination":"San Diego","dates":"Nov. 18-22"},{"destination":"College Tour","dates":"Nov. 24-28"},{"destination":"San Diego","dates":"Dec 10-12"},{"destination":"San Diego","dates":"Jan 12-13"},{"destination":"Tel Aviv","dates":"Jan. 27 - Feb 1"},{"destination":"San Diego","dates":"Feb 5-6"},{"destination":"Phoenix","dates":"Feb 7-9"},{"destination":"Disney/Universal","dates":"Feb 12-16"},{"destination":"San Francisco","dates":"Feb 24-27"},{"destination":"San Francisco","dates":"Feb 24-27"},{"destination":"Atlanta","dates":"May 30 - June 2"},{"destination":"San Diego","dates":"July 29-Aug9"},{"destination":"Atlanta","dates":"July 26-29"},{"destination":"Atlanta","dates":"July 26-29"},{"destination":"Cal Poly","dates":"Nov. 12-15"},{"destination":"Belize","dates":"Dec 20-28"},{"destination":"San Luis Obispo","dates":"Jan 12-15"},{"destination":"Eugene","dates":"Feb. 2-5"},{"destination":"Atlanta","dates":"July 26-29"},{"destination":"New Mexico, Arizona","dates":"March 24-31"},{"destination":"Eugene","dates":"April 19-22"},{"destination":"San Franciso, RSA","dates":"April 24-27"},{"destination":"CA College Tour","dates":"May 28-June 4"},{"destination":"Eugene","dates":"July 20-23"},{"destination":"London","dates":"Aug 31 - Sept 9"},{"destination":"Eugene","dates":"Sept 28 - Oct 1"},{"destination":"Eugene","dates":"Nov 27 - 29"},{"destination":"Eugene","dates":"Nov 30 - Dec 3"},{"destination":"Sante Fe","dates":"Dec 27 - 29"},{"destination":"Eugene","dates":"Feb 1-4"},{"destination":"Atlanta","dates":"Feb 19-23"},{"destination":"Phoenix","dates":"March 1-3"},{"destination":"Eugene","dates":"April 4-7"},{"destination":"SLO","dates":"June 13-18"},{"destination":"Broadmoor Conference","dates":"August 6-8"},{"destination":"Oxy drop off","dates":"August 15-19"},{"destination":"Services meeting","dates":"August 21-23"},{"destination":"Eugene","dates":"Sept 5-8"},{"destination":"Brownsville, TX","dates":"Sept 27-30"},{"destination":"Los Angeles","dates":"Oct 17-20"},{"destination":"Orlando","dates":"Oct 20-24"},{"destination":"Portugal & Morocco","dates":"Oct. 28 - Nov. 15"},{"destination":"Austin AWS","dates":"Nov 18-20"},{"destination":"Marketing LT","dates":"Dec 3-5"},{"destination":"Oxy move out","dates":"Jan 17-19"},{"destination":"Eugene","dates":"Jan 30 - Feb 2"},{"destination":"Utah / AZ","dates":"Feb 23 -Mar 1"},{"destination":"Phoenix","dates":"Mar 17 - 21"},{"destination":"Tampa","dates":"Apr 27 - May 1"},{"destination":"Brownsville","dates":"May 14 - 18"},{"destination":"Orlando","dates":"June 2 - 5"},{"destination":"Italy and Slovenia","dates":"July 3-12"},{"destination":"Eugene","dates":"July 16 - 20"},{"destination":"Tampa","dates":"Aug 26-29"},{"destination":"Austin, le mans","dates":"Sep 5-8"},{"destination":"Fort Worth","dates":"Sept 22-25"},{"destination":"Orlando","dates":"Nov 4-7"},{"destination":"Sante Fe","dates":"Nov 8-10"},{"destination":"Eugene to Denver","dates":"Nov 20-23"},{"destination":"Tampa","dates":"Dec 7-10"},{"destination":"Costa Rica","dates":"Dec 13-20"},{"destination":"Simsbury","dates":"Jan 22 - 26"},{"destination":"Costa Mesa, CA","dates":"Feb 18-23"}];
+const SEEDED_HISTORY = [
+  {
+    "destination": "Costa Mesa, CA",
+    "dates": "Feb 18-23, 2026",
+    "year": "2026"
+  },
+  {
+    "destination": "Simsbury",
+    "dates": "Jan 22 - 26, 2026",
+    "year": "2026"
+  },
+  {
+    "destination": "Costa Rica",
+    "dates": "Dec 13-20, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Tampa",
+    "dates": "Dec 7-10, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Eugene to Denver",
+    "dates": "Nov 20-23, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Sante Fe",
+    "dates": "Nov 8-10, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Orlando",
+    "dates": "Nov 4-7, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Fort Worth",
+    "dates": "Sept 22-25, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Austin, Le Mans",
+    "dates": "Sep 5-8, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Tampa",
+    "dates": "Aug 26-29, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "July 16 - 20, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Italy and Slovenia",
+    "dates": "July 3-12, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Orlando",
+    "dates": "June 2 - 5, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Brownsville",
+    "dates": "May 14 - 18, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Tampa",
+    "dates": "Apr 27 - May 1, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Phoenix",
+    "dates": "Mar 17 - 21, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Utah / AZ",
+    "dates": "Feb 23 - Mar 1, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "Jan 30 - Feb 2, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Oxy move out",
+    "dates": "Jan 17-19, 2025",
+    "year": "2025"
+  },
+  {
+    "destination": "Marketing LT",
+    "dates": "Dec 3-5, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Austin AWS",
+    "dates": "Nov 18-20, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Portugal & Morocco",
+    "dates": "Oct. 28 - Nov. 15, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Orlando",
+    "dates": "Oct 20-24, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Los Angeles",
+    "dates": "Oct 17-20, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Brownsville, TX",
+    "dates": "Sept 27-30, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "Sept 5-8, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Services meeting",
+    "dates": "August 21-23, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Oxy drop off",
+    "dates": "August 15-19, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Broadmoor Conference",
+    "dates": "August 6-8, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "SLO",
+    "dates": "June 13-18, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "April 4-7, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Phoenix",
+    "dates": "March 1-3, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Atlanta",
+    "dates": "Feb 19-23, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "Feb 1-4, 2024",
+    "year": "2024"
+  },
+  {
+    "destination": "Sante Fe",
+    "dates": "Dec 27 - 29, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "Nov 30 - Dec 3, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "Nov 27 - 29, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "Sept 28 - Oct 1, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "London",
+    "dates": "Aug 31 - Sept 9, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "July 20-23, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "CA College Tour",
+    "dates": "May 28-June 4, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "San Francisco, RSA",
+    "dates": "April 24-27, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "April 19-22, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "New Mexico, Arizona",
+    "dates": "March 24-31, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "Atlanta",
+    "dates": "July 26-29, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "Feb. 2-5, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "San Luis Obispo",
+    "dates": "Jan 12-15, 2023",
+    "year": "2023"
+  },
+  {
+    "destination": "Belize",
+    "dates": "Dec 20-28, 2022",
+    "year": "2022"
+  },
+  {
+    "destination": "Cal Poly",
+    "dates": "Nov. 12-15, 2022",
+    "year": "2022"
+  },
+  {
+    "destination": "Atlanta",
+    "dates": "July 26-29, 2022",
+    "year": "2022"
+  },
+  {
+    "destination": "Atlanta",
+    "dates": "July 26-29, 2022",
+    "year": "2022"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "July 29-Aug 9, 2022",
+    "year": "2022"
+  },
+  {
+    "destination": "Atlanta",
+    "dates": "May 30 - June 2, 2022",
+    "year": "2022"
+  },
+  {
+    "destination": "San Francisco",
+    "dates": "Feb 24-27, 2020",
+    "year": "2020"
+  },
+  {
+    "destination": "San Francisco",
+    "dates": "Feb 24-27, 2020",
+    "year": "2020"
+  },
+  {
+    "destination": "Disney/Universal",
+    "dates": "Feb 12-16, 2020",
+    "year": "2020"
+  },
+  {
+    "destination": "Phoenix",
+    "dates": "Feb 7-9, 2020",
+    "year": "2020"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Feb 5-6, 2020",
+    "year": "2020"
+  },
+  {
+    "destination": "Tel Aviv",
+    "dates": "Jan. 27 - Feb 1, 2020",
+    "year": "2020"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Jan 12-13, 2020",
+    "year": "2020"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Dec 10-12, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "College Tour",
+    "dates": "Nov. 24-28, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Nov. 18-22, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "Charleston",
+    "dates": "Nov. 6-11, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Oct. 23-24, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "Australia",
+    "dates": "Sep. 18 - Oct 2, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Sep 11-12, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "Mt Princeton",
+    "dates": "Aug 9-11, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "Las Vegas",
+    "dates": "Aug 6-8, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "Tokyo",
+    "dates": "6/15-6/20, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Apr 24-25, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "Houston",
+    "dates": "Apr. 17-20, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "San Jose",
+    "dates": "Apr. 1-2, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "Tel Aviv/Jerusalem",
+    "dates": "Jan. 26 - Feb3, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Jan 15-17, 2019",
+    "year": "2019"
+  },
+  {
+    "destination": "Ashland",
+    "dates": "Nov 20-24, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Jose",
+    "dates": "Apr. 1-2, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "Simsbury",
+    "dates": "Sept 20-25, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Aug 28-30, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Aug 23-24, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "Las Vegas",
+    "dates": "Aug 7-9, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "Vietnam",
+    "dates": "June 25-30, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "May 29-30, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "May 22-23, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Jose",
+    "dates": "Apr. 1-2, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Jose",
+    "dates": "Apr. 1-2, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Jose",
+    "dates": "Apr. 1-2, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Jose",
+    "dates": "Apr. 1-2, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Feb 21-23, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Jan 29-Feb 1, 2018",
+    "year": "2018"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Dec. 9-13, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "Bangkok",
+    "dates": "Dec. 1-5, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "Eugene",
+    "dates": "Nov. 20-23, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Nov. 1-2, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "London",
+    "dates": "11/28 - 12/2, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Oct. 13-14, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Aug 16-17, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Aug 16-17, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "Italy/London",
+    "dates": "2017",
+    "year": "2017"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Jan 17-19, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "San Francisco",
+    "dates": "Feb 13-16, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "Singapore",
+    "dates": "7/17-7/25, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "San Francisco",
+    "dates": "Feb 13-16, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Jan 17-19, 2017",
+    "year": "2017"
+  },
+  {
+    "destination": "Connecticut",
+    "dates": "12/25 - 1/2, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "London",
+    "dates": "11/28 - 12/2, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Nov. 14-16, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "Austin",
+    "dates": "Oct. 20-24, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "Marseille/Dublin",
+    "dates": "9/24 - 9/30, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "Sept. 15-19, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "San Diego",
+    "dates": "August 23-24, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "Las Vegas",
+    "dates": "August 4-7, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "Singapore",
+    "dates": "7/17-7/25, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "Santa Clara",
+    "dates": "May 11-13, 2016, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "London, Dublin",
+    "dates": "5/1 - 5/7, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "Hawaii",
+    "dates": "3/28-4/6, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "San Francisco",
+    "dates": "February 28 - March 4, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "San Francisco",
+    "dates": "Jan. 27-28 2016, 2016",
+    "year": "2016"
+  },
+  {
+    "destination": "London",
+    "dates": "11/14 - 11/21, 2015",
+    "year": "2015"
+  },
+  {
+    "destination": "London",
+    "dates": "11/14 - 11/21, 2015",
+    "year": "2015"
+  },
+  {
+    "destination": "Derby/London/Dublin",
+    "dates": "8/18 - 8/28, 2015",
+    "year": "2015"
+  },
+  {
+    "destination": "Las Vegas",
+    "dates": "August 4-7, 2015",
+    "year": "2015"
+  },
+  {
+    "destination": "Singapore",
+    "dates": "7/19-7/24, 2015",
+    "year": "2015"
+  },
+  {
+    "destination": "Tokyo",
+    "dates": "6/18-6/24, 2015",
+    "year": "2015"
+  },
+  {
+    "destination": "San Francisco",
+    "dates": "April 19-24, 2015",
+    "year": "2015"
+  },
+  {
+    "destination": "Tokyo",
+    "dates": "3/31-4/5, 2015",
+    "year": "2015"
+  },
+  {
+    "destination": "Universal Orlando",
+    "dates": "Feb 22-25, 2015",
+    "year": "2015"
+  },
+  {
+    "destination": "Seattle",
+    "dates": "Nov. 7-9, 2014, 2014",
+    "year": "2014"
+  },
+  {
+    "destination": "Seattle",
+    "dates": "Nov. 7-9, 2014, 2014",
+    "year": "2014"
+  },
+  {
+    "destination": "Washington D.C.",
+    "dates": "6/21-6/26, 2014",
+    "year": "2014"
+  },
+  {
+    "destination": "Tokyo",
+    "dates": "5/28-5/31, 2014",
+    "year": "2014"
+  },
+  {
+    "destination": "London",
+    "dates": "4/26 - 5/2, 2014",
+    "year": "2014"
+  },
+  {
+    "destination": "San Francisco",
+    "dates": "2014",
+    "year": "2014"
+  },
+  {
+    "destination": "San Jose",
+    "dates": "10/16/13 - 10/19/13, 2013",
+    "year": "2013"
+  },
+  {
+    "destination": "Legoland",
+    "dates": "June 5-9, 2013",
+    "year": "2013"
+  },
+  {
+    "destination": "Fort Lauderdale",
+    "dates": "Feb 15-18, 2013",
+    "year": "2013"
+  },
+  {
+    "destination": "Copenhagen",
+    "dates": "2/2/13 - 2/9/13, 2013",
+    "year": "2013"
+  },
+  {
+    "destination": "Chicago",
+    "dates": "11/19/12 - 11/20/12, 2012",
+    "year": "2012"
+  },
+  {
+    "destination": "New York",
+    "dates": "10/8/12 - 10/11/12, 2012",
+    "year": "2012"
+  },
+  {
+    "destination": "Crested Butte",
+    "dates": "July 19-21, 2012",
+    "year": "2012"
+  },
+  {
+    "destination": "Canon City/Royal Gorge.",
+    "dates": "June 29 - July 1, 2012",
+    "year": "2012"
+  },
+  {
+    "destination": "Washington D.C.",
+    "dates": "May 3-6, 2012",
+    "year": "2012"
+  },
+  {
+    "destination": "Phoenix",
+    "dates": "Nov 10-13, 2011",
+    "year": "2011"
+  },
+  {
+    "destination": "Oregon Roadtrip",
+    "dates": "July 27-August 7th, 2011",
+    "year": "2011"
+  },
+  {
+    "destination": "Yellowstone",
+    "dates": "May 31-June 4, 2011",
+    "year": "2011"
+  },
+  {
+    "destination": "West Simsbury",
+    "dates": "Dec. 23-31, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "Basking Ridge",
+    "dates": "11/3/10 - 11/4/10, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "World Equestrian Games",
+    "dates": "9/29/10 - 10/4/10, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "Glenwood Springs",
+    "dates": "Aug. 12-14, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "Chicago SME Show / Iowa",
+    "dates": "5/18/10 - 5/21/10, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "San Antonio SKO",
+    "dates": "2/2/10 - 2/5/10, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "Cleveland Cust Event",
+    "dates": "4/14/10 - 4/15/10, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "Steamboat",
+    "dates": "Mar. 26-28, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "Legoland",
+    "dates": "Feb 13-16, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "San Antonio SKO",
+    "dates": "2/2/10 - 2/5/10, 2010",
+    "year": "2010"
+  },
+  {
+    "destination": "Hawaii",
+    "dates": "11/15-11/24, 2009",
+    "year": "2009"
+  },
+  {
+    "destination": "Nashville FY10 SKO",
+    "dates": "10/11/09 - 10/15/09, 2009",
+    "year": "2009"
+  },
+  {
+    "destination": "Basking Ridge",
+    "dates": "9/1/09 - 9/3/09, 2009",
+    "year": "2009"
+  },
+  {
+    "destination": "InAAU Orlando",
+    "dates": "May 17-20, 2009",
+    "year": "2009"
+  },
+  {
+    "destination": "AT&T Meeting - Atlanta",
+    "dates": "May 12-13, 2009",
+    "year": "2009"
+  },
+  {
+    "destination": "VoiceCon Orlando",
+    "dates": "March 29 - April 1, 2009",
+    "year": "2009"
+  },
+  {
+    "destination": "Microsoft WPC",
+    "dates": "Nov. 13-15, 2008, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "Escape the Cube St. Louis",
+    "dates": "Nov. 5-6, 2008, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "Becky/Marcus wedding",
+    "dates": "Sept. 24-28, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "Chicago/NYC",
+    "dates": "August 18-21, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "Oregon Roadtrip",
+    "dates": "July 25-August 3rd, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "MS101 Training Redmond",
+    "dates": "July 15-20, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "MSFT Customer Briefing",
+    "dates": "April 23-25, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "Sante Fe > California",
+    "dates": "12/26 - 1/3, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "Basking Ridge",
+    "dates": "2/11/08-2/14/08, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "Basking Ridge",
+    "dates": "1/16/08-1/18/08, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "BT Americas Meeting",
+    "dates": "8/14-8/16, 2007",
+    "year": "2007"
+  },
+  {
+    "destination": "Glasgow, Scotland-Wedding",
+    "dates": "5/9/07-5/14/07, 2007",
+    "year": "2007"
+  },
+  {
+    "destination": "Florida/Disney/Space Center",
+    "dates": "1/13-1/20, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "BT Americas Meeting",
+    "dates": "1/9-1/10, 2008",
+    "year": "2008"
+  },
+  {
+    "destination": "SAPPHIRE 08",
+    "dates": "2008",
+    "year": "2008"
+  },
+  {
+    "destination": "Nag's Head, NC",
+    "dates": "2007",
+    "year": "2007"
+  }
+];
 
 // ── App State ──────────────────────────────────────────────────
 let state = {
@@ -891,10 +1783,17 @@ function populateSetupForm(trip) {
     }
   } else {
     document.getElementById('sDestination').value = '';
-    document.getElementById('sStart').value       = '';
-    document.getElementById('sEnd').value         = '';
+    // Default depart to start of current week (Sunday)
+    const today = new Date();
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() - today.getDay());
+    const sundayStr = sunday.toISOString().split('T')[0];
+    document.getElementById('sStart').value = sundayStr;
+    document.getElementById('sStart').min   = sundayStr;
+    document.getElementById('sEnd').value   = '';
     selType('personal', false);
     selMode('air', false);
+    onDatesChange();
   }
 }
 
@@ -903,6 +1802,13 @@ window.toggleSetup = function() {
 };
 
 window.onDatesChange = function() {
+  const start = document.getElementById('sStart').value;
+  if (start) {
+    document.getElementById('sEnd').min = start;
+    // If return is before depart, clear it
+    const end = document.getElementById('sEnd').value;
+    if (end && end < start) document.getElementById('sEnd').value = '';
+  }
   const days = getTripDays();
   if (state.setupType === 'business' && days > 0) populateBizDropdown(days, null);
   window.onBizDaysChange();
@@ -1059,12 +1965,17 @@ window.onLeftQty = function(catId, itemId, sel) {
     const inp = document.getElementById('lc-' + itemId);
     inp.classList.add('open');
     inp.focus();
-    sel.value = sel.options[sel.options.length - 2].value; // revert to last real value
+    sel.value = sel.options[sel.options.length - 2].value;
     return;
   }
   const item = findItem(catId, itemId);
   if (!item) return;
-  item.quantity = parseInt(sel.value);
+  const val = parseInt(sel.value);
+  item.quantity = val;
+  if (val === 0) {
+    item.section = 'optional';
+    item.packedQty = 0;
+  }
   save(); renderList(state.trips[state.activeIdx]);
 };
 
@@ -1106,7 +2017,10 @@ window.commitCustomRight = function(catId, itemId, inp) {
 
 window.promoteItem = function(catId, itemId) {
   const item = findItem(catId, itemId);
-  if (item) { item.section = 'packing'; save(); renderList(state.trips[state.activeIdx]); }
+  if (!item) return;
+  item.section = 'packing';
+  if (!item.quantity || item.quantity === 0) item.quantity = 1;
+  save(); renderList(state.trips[state.activeIdx]);
 };
 
 window.toggleTodo = function(id, done) {
@@ -1296,10 +2210,9 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Shoes',          1),
     item('Jacket',         1),
     item('Sweater / Hoodie', 1),
-    item('Shorts',         1),
+    item('Shorts',         Math.ceil(days/2)),
     item('Sandals',        1, 'optional'),
     item('Sunglasses',     1),
-    item('Umbrella',       1, 'optional'),
     item('Laundry Bag',    1),
   ]});
 
@@ -1328,7 +2241,8 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Portable Charger',  1),
     item('Headphones',        1),
     item('Book',              1, 'optional'),
-    ...(isCar ? [item('Car Charger',     1), item('Car Phone Mount', 1)] : [item('Car Charger', 1, 'optional'), item('Car Phone Mount', 1, 'optional')]),
+    item('Car Charger',     1, 'optional'),
+    item('Car Phone Mount', 1, 'optional'),
   ]});
 
   // Work (business)
@@ -1347,9 +2261,9 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
   // Toiletries
   cats.push({ id: uid(), name: 'Toiletries', items: [
     item('Shaver',            1),
-    item('Shaver Charger',    1),
+    item('Shaver Charger',    1, 'optional'),
     item('Toothbrush',        1),
-    item('Toothbrush Charger',1),
+    item('Toothbrush Charger',1, 'optional'),
     item('Toothpaste',        1),
     item('Deodorant',         1),
     item('Shampoo',           1),
@@ -1357,7 +2271,7 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Q-tips',            1),
     item('Tissues',           1),
     item('Sunscreen',         1, 'optional'),
-    item('Medications',       1, 'optional'),
+    item('Medications',       1),
   ]});
 
   // Travel & Documents
@@ -1365,14 +2279,15 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
     item('Wallet',            1),
     item('Passport / ID',     1),
     item('Snacks',            1),
+    item('Umbrella',          1, 'optional'),
     item('Boarding Pass',     1, 'optional'),
     item('Membership Cards',  1, 'optional'),
   ]});
 
   // Bags
   cats.push({ id: uid(), name: 'Bags', items: [
-    item('Carry-on',   1, isCar ? 'optional' : 'packing'),
-    item('Backpack',   1, 'optional'),
+    item('Carry-on',   1),
+    item('Backpack',   1),
     item('Suitcase',   1, 'optional'),
     item('Duffel Bag', 1, 'optional'),
   ]});
@@ -1380,8 +2295,7 @@ function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
   // Car items
   if (isCar) {
     const carItems = [
-      item('Water',          1, 'optional'),
-      item('Extra Snacks',   1, 'optional'),
+      item('Water',          1),
       item('Maps / GPS',     1, 'optional'),
       item('Paper Towels',   1, 'optional'),
     ];
