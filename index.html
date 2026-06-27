@@ -25,8 +25,8 @@
   --accent-bg: #1A2F48;
   --packed:    #2A9D5C;
   --packed-bg: #0F2A1E;
-  --optional:  #7C6FAA;
-  --opt-bg:    #1E1A30;
+  --optional:  #6B5F99;
+  --opt-bg:    #1A1728;
   --danger:    #C0392B;
   --danger-bg: #2A1015;
   --tab-h:     48px;
@@ -59,6 +59,8 @@ body {
   z-index: 50;
 }
 .topbar-title { font-size: 16px; font-weight: 700; letter-spacing: -0.2px; color: var(--text); }
+.topbar-title[type="text"]:hover { background: var(--surface2) !important; border-radius: 4px; }
+.topbar-title[type="text"]:focus { outline: none; background: var(--surface2) !important; border-radius: 4px; }
 .topbar-meta  { font-size: 12px; color: var(--text3); margin-top: 1px; }
 .topbar-left  { flex: 1; min-width: 0; }
 .topbar-right { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
@@ -282,7 +284,7 @@ body {
   appearance: none; -webkit-appearance: none; cursor: pointer;
 }
 .qty-sel:focus { outline: none; border-color: var(--accent); }
-.qty-sel.under-packed { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+.qty-sel.under-packed { border-color: var(--optional); box-shadow: 0 0 0 1px var(--optional); }
 .qty-sel.over-packed  { font-weight: 700; }
 .qty-divider { font-size: 11px; color: var(--border2); padding: 0 1px; }
 .qty-sel.packed-full { background: var(--packed-bg); border-color: var(--packed); color: var(--packed); font-weight: 700; }
@@ -598,7 +600,7 @@ body {
   <!-- Top bar -->
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-title" id="listTitle">Packing List</div>
+      <input class="topbar-title" id="listTitle" type="text" value="Packing List" onblur="saveDestination(this.value)" onkeydown="if(event.key==='Enter')this.blur()" style="background:none;border:none;color:inherit;font-size:16px;font-weight:700;letter-spacing:-0.2px;width:100%;min-width:0;padding:0;cursor:text;" />
       <div class="topbar-meta" id="listMeta"></div>
     </div>
     <div class="topbar-right">
@@ -737,6 +739,7 @@ const fbApp = initializeApp(fbConfig);
 const db    = getFirestore(fbApp);
 const STATE_REF   = doc(db, 'packingList', 'currentTrip');
 const HISTORY_REF = doc(db, 'packingList', 'tripHistory');
+const MASTER_REF  = doc(db, 'packingList', 'masterTemplate');
 
 // ── Trip History (pre-seeded from Excel) ──────────────────────
 const SEEDED_HISTORY = []; // Loaded from Firestore on first run
@@ -746,13 +749,26 @@ let state = {
   trips: [],        // array of trip objects
   activeIdx: 0,
   history: [],      // past trips (dest + dates)
+  master: null,     // master template (loaded from Firestore)
   setupType: 'personal',
   setupMode: 'air'
 };
-let dragSrc = null;
+
 let confirmCb = null;
 
 // ── Boot ──────────────────────────────────────────────────────
+// ── Destination edit ─────────────────────────────────────────
+window.saveDestination = function(val) {
+  const trip = state.trips[state.activeIdx];
+  if (!trip) return;
+  const name = val.trim();
+  if (!name || name === trip.destination) return;
+  trip.destination = name;
+  document.getElementById('listTitle').value = name;
+  renderTabs();
+  save();
+};
+
 // ── Notes popover ────────────────────────────────────────────
 let noteTarget = null; // { catId, itemId }
 
@@ -822,6 +838,17 @@ let isFirstLoad = true;
 let isSaving = false;
 
 async function boot() {
+  // Load or seed master template
+  try {
+    const masterSnap = await getDoc(MASTER_REF);
+    if (masterSnap.exists()) {
+      state.master = masterSnap.data();
+    } else {
+      state.master = buildDefaultMaster();
+      await setDoc(MASTER_REF, state.master);
+    }
+  } catch(e) { console.error('Master load error', e); }
+
   // Load or seed trip history from Firestore
   try {
     const histSnap = await getDoc(HISTORY_REF);
@@ -888,6 +915,11 @@ async function save() {
   finally { setTimeout(() => { isSaving = false; }, 1000); }
 }
 
+async function saveMaster() {
+  try { await setDoc(MASTER_REF, state.master); }
+  catch(e) { console.error('Master save error', e); }
+}
+
 // ── Views ─────────────────────────────────────────────────────
 function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -904,7 +936,7 @@ function render() {
   const trip = state.trips[state.activeIdx];
   if (!trip) {
     // No trips: show empty + expanded setup
-    document.getElementById('listTitle').textContent = 'Packing List';
+    document.getElementById('listTitle').value = 'Packing List';
     document.getElementById('listMeta').textContent  = '';
     document.getElementById('progressStrip').style.display = 'none';
     document.getElementById('markDoneBtn').style.display = 'none';
@@ -917,7 +949,7 @@ function render() {
     return;
   }
 
-  document.getElementById('listTitle').textContent = trip.destination;
+  document.getElementById('listTitle').value = trip.destination;
   document.getElementById('listMeta').textContent  = fmtDateRange(trip.startDate, trip.endDate) + '  ·  ' + trip.tripDays + ' days';
   document.getElementById('markDoneBtn').style.display = '';
   document.getElementById('setupToggleLabel').textContent = 'Trip Details';
@@ -1206,13 +1238,17 @@ window.generateList = function() {
     id: uid(), destination: dest, startDate: start, endDate: end,
     tripDays: days, tripType: isBiz ? 'business' : 'personal', travelMode: isCar ? 'car' : (document.getElementById('mOther').classList.contains('sel') ? 'other' : 'air'),
     businessDays: bizDays, casualDays: casDay, isWinter,
-    categories: buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }),
-    todos: [
-      { id: uid(), text: 'Pack bags',               done: false },
-      { id: uid(), text: 'Charge devices',           done: false },
-      { id: uid(), text: 'Check weather forecast',   done: false },
-      { id: uid(), text: 'Download shows',           done: false }
-    ]
+    categories: state.master
+      ? buildCategoriesFromMaster({ days, isBiz, bizDays, casDay, isCar, isWinter })
+      : buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }),
+    todos: state.master && state.master.todos
+      ? state.master.todos.map(t => ({ id: uid(), text: t.text, done: false }))
+      : [
+          { id: uid(), text: 'Pack bags',             done: false },
+          { id: uid(), text: 'Charge devices',         done: false },
+          { id: uid(), text: 'Check weather forecast', done: false },
+          { id: uid(), text: 'Download shows',         done: false }
+        ]
   };
 
   // Replace current trip if it exists, otherwise add
@@ -1248,7 +1284,7 @@ window.addNewTrip = function() {
   // Actually just show setup for a new blank trip
   state.activeIdx = state.trips.length; // beyond array = new
   renderTabs();
-  document.getElementById('listTitle').textContent = 'New Trip';
+  document.getElementById('listTitle').value = 'New Trip';
   document.getElementById('listMeta').textContent  = '';
   document.getElementById('progressStrip').style.display = 'none';
   document.getElementById('markDoneBtn').style.display = 'none';
@@ -1393,27 +1429,49 @@ window.deleteTodo = function(id) {
 
 // ── Edit view ─────────────────────────────────────────────────
 function renderEdit() {
-  const trip = state.trips[state.activeIdx];
-  if (!trip) { showView('viewList'); return; }
-  document.getElementById('editMeta').textContent = trip.destination + '  ·  ' + fmtDateRange(trip.startDate, trip.endDate);
+  if (!state.master) { showView('viewList'); return; }
+  document.getElementById('editMeta').textContent = 'Default list for all new trips';
 
+  const m = state.master;
   let html = '';
-  trip.categories.forEach(cat => {
+
+  m.categories.forEach(cat => {
     html += `<div class="edit-cat-block">
       <div class="edit-cat-header"><h3>${esc(cat.name)}</h3></div>
       <div class="edit-items-list" id="el-${cat.id}" data-cat-id="${cat.id}">`;
     cat.items.forEach(item => { html += editRowHtml(item, cat.id); });
     html += `</div>
       <div class="add-row">
-        <input type="text" placeholder="Add to ${esc(cat.name)}..." id="ai-${cat.id}" onkeydown="if(event.key==='Enter')addItem('${cat.id}')" />
+        <input type="text" placeholder="Add to ${esc(cat.name)}..." id="ai-${cat.id}" onkeydown="if(event.key==='Enter')addMasterItem('${cat.id}')" />
         <select id="as-${cat.id}">
           <option value="packing">Packing</option>
           <option value="optional">Optional</option>
         </select>
-        <button class="btn btn-ghost btn-sm" onclick="addItem('${cat.id}')">Add</button>
+        <button class="btn btn-ghost btn-sm" onclick="addMasterItem('${cat.id}')">Add</button>
       </div>
     </div>`;
   });
+
+  // Default To-Do list
+  html += `<div class="edit-cat-block">
+    <div class="edit-cat-header"><h3>Default To-Do List</h3></div>
+    <div class="edit-items-list" id="el-todos-master">`;
+  (m.todos || []).forEach(t => {
+    html += `<div class="edit-row" data-todo-id="${t.id}">
+      <span class="drag-handle">⠿</span>
+      <span class="edit-item-name">${esc(t.text)}</span>
+      <div class="edit-actions">
+        <button class="edit-btn del" onclick="confirmDelMasterTodo('${t.id}','${esc(t.text)}')">Remove</button>
+      </div>
+    </div>`;
+  });
+  html += `</div>
+    <div class="add-row">
+      <input type="text" placeholder="Add default to-do..." id="ai-todos-master" onkeydown="if(event.key==='Enter')addMasterTodo()" />
+      <button class="btn btn-ghost btn-sm" onclick="addMasterTodo()">Add</button>
+    </div>
+  </div>`;
+
   document.getElementById('editBody').innerHTML = html;
   initDrag();
 }
@@ -1435,56 +1493,145 @@ function editRowHtml(item, catId) {
 }
 
 window.toggleSection = function(catId, itemId) {
-  const item = findItem(catId, itemId);
+  const cat = state.master.categories.find(c => c.id === catId);
+  const item = cat ? cat.items.find(i => i.id === itemId) : null;
   if (!item) return;
   item.section = item.section === 'packing' ? 'optional' : 'packing';
-  save(); renderEdit();
+  saveMaster(); renderEdit();
 };
 
-window.addItem = function(catId) {
+window.addMasterItem = function(catId) {
   const inp  = document.getElementById('ai-' + catId);
   const name = inp.value.trim();
   if (!name) return;
   const sec = document.getElementById('as-' + catId).value;
-  const cat = findCat(catId);
+  const cat = state.master.categories.find(c => c.id === catId);
   if (!cat) return;
-  cat.items.push({ id: uid(), name, quantity: 1, packedQty: 0, section: sec });
+  const newItem = { id: uid(), name, section: sec };
+  cat.items.push(newItem);
   inp.value = '';
-  save(); renderEdit();
+  // Add as optional to all active trips
+  state.trips.forEach(trip => {
+    const tc = trip.categories.find(c => c.name === cat.name);
+    if (tc) tc.items.push({ id: uid(), name, quantity: 1, packedQty: 0, section: 'optional' });
+  });
+  saveMaster(); save(); renderEdit();
 };
 
 window.confirmDel = function(catId, itemId, name) {
-  confirm2(`Remove "${name}"?`, 'This item will be deleted from your list.', () => {
-    const cat = findCat(catId);
-    if (cat) { cat.items = cat.items.filter(i => i.id !== itemId); save(); renderEdit(); }
+  confirm2(`Remove "${name}" from master list?`, 'This will not affect existing trips.', () => {
+    const cat = state.master.categories.find(c => c.id === catId);
+    if (cat) { cat.items = cat.items.filter(i => i.id !== itemId); saveMaster(); renderEdit(); }
   });
 };
 
-// ── Drag & drop ───────────────────────────────────────────────
+window.addMasterTodo = function() {
+  const inp  = document.getElementById('ai-todos-master');
+  const text = inp.value.trim();
+  if (!text) return;
+  if (!state.master.todos) state.master.todos = [];
+  state.master.todos.push({ id: uid(), text });
+  inp.value = '';
+  saveMaster(); renderEdit();
+};
+
+window.confirmDelMasterTodo = function(todoId, name) {
+  confirm2(`Remove "${name}" from default to-do list?`, 'This will not affect existing trips.', () => {
+    state.master.todos = (state.master.todos || []).filter(t => t.id !== todoId);
+    saveMaster(); renderEdit();
+  });
+};
+
+// ── Drag & drop (mouse + touch) ──────────────────────────────
+let dragSrcEl = null, touchDragEl = null, touchPlaceholder = null;
+
 function initDrag() {
   document.querySelectorAll('.edit-row').forEach(row => {
-    row.addEventListener('dragstart', e => { dragSrc = row; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
-    row.addEventListener('dragend',   () => { row.classList.remove('dragging'); clearDragOver(); });
-    row.addEventListener('dragover',  e => { e.preventDefault(); if (dragSrc && dragSrc !== row) { clearDragOver(); row.classList.add('drag-over-top'); } });
-    row.addEventListener('drop',      e => { e.preventDefault(); if (!dragSrc || dragSrc === row) return; moveItemDrop(dragSrc.dataset.catId, dragSrc.dataset.itemId, row.dataset.catId, row.dataset.itemId); });
+    // Mouse drag
+    row.setAttribute('draggable', 'true');
+    row.addEventListener('dragstart', e => { dragSrcEl = row; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    row.addEventListener('dragend',   () => { row.classList.remove('dragging'); clearDragOver(); dragSrcEl = null; });
+    row.addEventListener('dragover',  e => { e.preventDefault(); if (dragSrcEl && dragSrcEl !== row) { clearDragOver(); row.classList.add('drag-over-top'); } });
+    row.addEventListener('drop',      e => { e.preventDefault(); if (!dragSrcEl || dragSrcEl === row) return; commitDrop(dragSrcEl, row); });
+
+    // Touch drag via handle only
+    const handle = row.querySelector('.drag-handle');
+    if (handle) {
+      handle.addEventListener('touchstart', e => startTouchDrag(e, row), { passive: false });
+    }
   });
 }
+
 function clearDragOver() { document.querySelectorAll('.drag-over-top').forEach(r => r.classList.remove('drag-over-top')); }
 
-function moveItemDrop(sCatId, sItemId, tCatId, tItemId) {
-  const sCat = findCat(sCatId), tCat = findCat(tCatId);
-  if (!sCat || !tCat) return;
-  const si = sCat.items.findIndex(i => i.id === sItemId);
-  const ti = tCat.items.findIndex(i => i.id === tItemId);
-  if (si === -1 || ti === -1) return;
-  const [moved] = sCat.items.splice(si, 1);
-  if (sCatId !== tCatId) {
-    const pc = tCat.items.filter(i => i.section === 'packing').length;
-    const oc = tCat.items.filter(i => i.section === 'optional').length;
-    moved.section = pc >= oc ? 'packing' : 'optional';
+function startTouchDrag(e, row) {
+  e.preventDefault();
+  touchDragEl = row;
+  row.classList.add('dragging');
+
+  function onMove(ev) {
+    ev.preventDefault();
+    const touch = ev.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = el ? el.closest('.edit-row') : null;
+    clearDragOver();
+    if (target && target !== touchDragEl) target.classList.add('drag-over-top');
   }
-  tCat.items.splice(ti, 0, moved);
-  save(); renderEdit();
+
+  function onEnd(ev) {
+    row.classList.remove('dragging');
+    const touch = ev.changedTouches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = el ? el.closest('.edit-row') : null;
+    clearDragOver();
+    if (target && target !== touchDragEl) commitDrop(touchDragEl, target);
+    touchDragEl = null;
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
+  }
+
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend', onEnd);
+}
+
+function commitDrop(srcRow, tgtRow) {
+  const sCatId  = srcRow.dataset.catId;
+  const sItemId = srcRow.dataset.itemId;
+  const sTodoId = srcRow.dataset.todoId;
+  const tCatId  = tgtRow.dataset.catId;
+  const tItemId = tgtRow.dataset.itemId;
+  const tTodoId = tgtRow.dataset.todoId;
+
+  // Todo reorder
+  if (sTodoId && tTodoId) {
+    const todos = state.master.todos;
+    const si = todos.findIndex(t => t.id === sTodoId);
+    const ti = todos.findIndex(t => t.id === tTodoId);
+    if (si !== -1 && ti !== -1) {
+      const [moved] = todos.splice(si, 1);
+      todos.splice(ti, 0, moved);
+      saveMaster(); renderEdit();
+    }
+    return;
+  }
+
+  // Item reorder in master
+  if (sCatId && tCatId) {
+    const sCat = state.master.categories.find(c => c.id === sCatId);
+    const tCat = state.master.categories.find(c => c.id === tCatId);
+    if (!sCat || !tCat) return;
+    const si = sCat.items.findIndex(i => i.id === sItemId);
+    const ti = tCat.items.findIndex(i => i.id === tItemId);
+    if (si === -1 || ti === -1) return;
+    const [moved] = sCat.items.splice(si, 1);
+    if (sCatId !== tCatId) {
+      const pc = tCat.items.filter(i => i.section === 'packing').length;
+      const oc = tCat.items.filter(i => i.section === 'optional').length;
+      moved.section = pc >= oc ? 'packing' : 'optional';
+    }
+    tCat.items.splice(ti, 0, moved);
+    saveMaster(); renderEdit();
+  }
 }
 
 // ── History ───────────────────────────────────────────────────
@@ -1551,6 +1698,113 @@ document.getElementById('confirmOk').addEventListener('click', () => {
 document.getElementById('confirmOverlay').addEventListener('click', e => { if (e.target.id === 'confirmOverlay') closeConfirm(); });
 
 // ── Default categories builder ────────────────────────────────
+// ── Build default master template ────────────────────────────
+function buildDefaultMaster() {
+  function mitem(name, section='packing') {
+    return { id: uid(), name, section };
+  }
+  return {
+    categories: [
+      { id: uid(), name: 'Casual Clothes', items: [
+        mitem('Shirts'), mitem('Pants'), mitem('Shorts'), mitem('Socks'),
+        mitem('Underwear'), mitem('Shoes'), mitem('Sandals'), mitem('Belt'),
+        mitem('Jacket'), mitem('Sweater / Hoodie'), mitem('Sunglasses'),
+        mitem('Laundry Bag'), mitem('Long-Sleeve Shirt','optional'), mitem('Eye Mask','optional'),
+      ]},
+      { id: uid(), name: 'Dress Clothes', items: [
+        mitem('Dress Shirts'), mitem('Undershirts'), mitem('Dress Socks'),
+        mitem('Dress Shoes'), mitem('Belt'), mitem('Dress Pants'),
+        mitem('Tie','optional'), mitem('Suit Jacket','optional'),
+      ]},
+      { id: uid(), name: 'Electronics', items: [
+        mitem('Phone'), mitem('Phone Charger'), mitem('iPad'), mitem('iPad Charger'),
+        mitem('Apple Watch'), mitem('Watch Charger'), mitem('Portable Charger'),
+        mitem('Headphones'), mitem('Travel Charger'),
+        mitem('Car Charger','optional'), mitem('Car Phone Mount','optional'),
+      ]},
+      { id: uid(), name: 'Work', items: [
+        mitem('Laptop'), mitem('Laptop Charger'), mitem('Mouse'), mitem('Work ID'),
+        mitem('Glasses'), mitem('Monitor','optional'), mitem('Monitor Cord','optional'),
+      ]},
+      { id: uid(), name: 'Toiletries', items: [
+        mitem('Shaver'), mitem('Shaver Charger','optional'), mitem('Toothbrush'),
+        mitem('Toothbrush Charger','optional'), mitem('Toothpaste'), mitem('Deodorant'),
+        mitem('Shampoo'), mitem('Clippers'), mitem('Q-tips'), mitem('Tissues'),
+        mitem('Lens Wipes'), mitem('Sunscreen','optional'),
+        mitem('Multivitamins'), mitem('Medications'),
+      ]},
+      { id: uid(), name: 'Travel & Documents', items: [
+        mitem('Book','optional'), mitem('Wallet'), mitem('Passport / ID'), mitem('Snacks'),
+        mitem('Water Bottle'), mitem('Umbrella','optional'), mitem('Boarding Pass','optional'),
+        mitem('Membership Cards','optional'), mitem('Electrolytes','optional'),
+        mitem('Data Plans','optional'), mitem('Fan','optional'), mitem('Tea','optional'),
+      ]},
+      { id: uid(), name: 'Bags', items: [
+        mitem('Carry-on'), mitem('Backpack'), mitem('Suitcase','optional'),
+        mitem('Duffel Bag','optional'), mitem('Airtags','optional'),
+      ]},
+      { id: uid(), name: 'Car Items', items: [
+        mitem('Water'), mitem('Map','optional'), mitem('Paper Towels','optional'),
+        mitem('Snow Brush / Scraper','optional'), mitem('Shovel','optional'),
+        mitem('Car Blanket','optional'), mitem('Emergency Kit','optional'),
+      ]},
+    ],
+    todos: [
+      { id: uid(), text: 'Pack bags' },
+      { id: uid(), text: 'Charge devices' },
+      { id: uid(), text: 'Check weather forecast' },
+      { id: uid(), text: 'Download shows' },
+    ]
+  };
+}
+
+// ── Build categories from master template ─────────────────────
+function buildCategoriesFromMaster({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
+  const packDays  = days - 1;
+  const casualDays = isBiz ? Math.ceil(packDays * 0.75) : packDays;
+  const packBizDays = Math.max(1, bizDays - 1);
+
+  function qtyFor(name) {
+    // Dynamic quantities based on trip params
+    const q = {
+      'Shirts': casualDays, 'Pants': Math.ceil(casualDays/2),
+      'Shorts': isBiz ? 1 : Math.ceil(casualDays/2),
+      'Socks': packDays+1, 'Underwear': packDays+1,
+      'Dress Shirts': packBizDays, 'Undershirts': packBizDays,
+      'Dress Socks': packBizDays, 'Dress Pants': Math.ceil(packBizDays/2),
+      'Multivitamins': packDays*2, 'Medications': packDays,
+    };
+    return Math.max(1, q[name] || 1);
+  }
+
+  // Determine which categories are active for this trip type
+  const skipCats = new Set();
+  if (!isBiz) { skipCats.add('Dress Clothes'); skipCats.add('Work'); }
+  if (!isCar)  skipCats.add('Car Items');
+
+  const cats = [];
+  (state.master.categories || []).forEach(mcat => {
+    if (skipCats.has(mcat.name)) return;
+    const items = mcat.items
+      .filter(mi => {
+        // For car items, skip winter items if not winter
+        if (mcat.name === 'Car Items' && !isWinter &&
+            ['Snow Brush / Scraper','Shovel','Car Blanket','Emergency Kit'].includes(mi.name)) return false;
+        // Skip car-only items for non-car trips
+        if (!isCar && ['Car Charger','Car Phone Mount','Water','Map','Paper Towels'].includes(mi.name) && mi.section === 'packing') return true;
+        return true;
+      })
+      .map(mi => ({
+        id: uid(), name: mi.name,
+        quantity: qtyFor(mi.name),
+        packedQty: 0,
+        section: mi.section
+      }));
+    if (items.length) cats.push({ id: uid(), name: mcat.name, items });
+  });
+  return cats;
+}
+
 function buildCategories({ days, isBiz, bizDays, casDay, isCar, isWinter }) {
   function item(name, qty, section='packing') {
     return { id: uid(), name, quantity: Math.max(1, qty || 1), packedQty: 0, section };
